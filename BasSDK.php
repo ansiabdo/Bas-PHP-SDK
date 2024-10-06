@@ -12,14 +12,13 @@ include('config.php');
  */
 
 
-
 class BasSDK
 {
     private static $ContentTypexwww = 'Content-Type: application/x-www-form-urlencoded';
     private static $ContentTypeJson =  array('Content-Type: application/json', 'Accept: text/plain');
 
 
-    static public function getUserInfo($code)
+    static public function getUserInfoV2($code)
     {
 
         $token = self::getToken($code);
@@ -32,7 +31,26 @@ class BasSDK
         return null;
     }
 
-    static public function getToken($code)
+    static public function getUserInfo($code)
+    {
+        $data = array();
+        $data['client_secret'] = self::GetClientSecret();
+        $data['client_id'] = self::GetClientId();
+        //$data['grant_type'] = 'authorization_code';
+        $data['code'] = $code;
+        $data['redirect_uri'] = BASEURL . 'auth/callback';
+
+        $token = self::getToken($code);
+        //return $token;
+        if (!is_null($token)) {
+            $header = array('Authorization: Bearer ' . $token);
+            $response =    self::httpGet(BASEURL . "auth/userInfo", null, $header);
+            return json_decode($response, true);
+        }
+        return null;
+    }
+
+    static public function getToken($code): mixed
     {
         $header = array('Content-Type: application/x-www-form-urlencoded');
         $data = array();
@@ -192,4 +210,168 @@ class BasSDK
             return $response;
         }
     }
+   
+    
+/**
+     * Implement changes based on updates to Bas Sdk in C#
+     *
+     *
+     */
+
+     public static function Initialize(ENVIRONMENT $environment, string $mKey, string $appId, string $clientId, string $clientSecret): void
+     {
+         ConfigProperties::$environment = $environment;
+         self::SetAppId($appId); 
+         self::SetMKey(mKey: $mKey); 
+         self::SetClientId(clientId: $clientId); 
+         self::SetClientSecret(clientSecret: $clientSecret); 
+     }
+
+     /**
+         * 
+         * Get full baseUrl of API
+         */
+
+     static function GetFullBaseUrlBasedOnEnvironment($relativePath): string {
+        $baseUrl = "";
+        switch (ConfigProperties::$environment) {
+            case ENVIRONMENT::STAGING:
+                $baseUrl = ConfigProperties::baseUrlStaging.$relativePath;
+                return $baseUrl;
+            case ENVIRONMENT::PRODUCTION:
+                $baseUrl = ConfigProperties::baseUrlProduction.$relativePath;
+                return $baseUrl;
+            case ENVIRONMENT::SANDBOX:
+                $baseUrl = ConfigProperties::BaseUrlSandbox.$relativePath;
+                return $baseUrl;
+            default:
+               throw new InvalidArgumentException("BASSDK.UnKnown Environment" . ConfigProperties::$environment);
+         }
+    }
+
+
+      /**
+     * Set the appId during initialization.
+     *
+     * @param  int  $appId
+     * 
+     */
+    private static function SetAppId(string $appId): void
+    {
+        if (empty($appId)) {
+            throw new InvalidArgumentException("BASSDK.SetAppId appId is null");
+        }
+        ConfigProperties::$appId = $appId;
+    }
+
+      /**
+     * Set the mKey during initialization.
+     *
+     * @param  int  $mKey
+     * 
+     */
+    private static function SetMKey(string $mKey): void
+    {
+        if (empty($mKey)) {
+            throw new InvalidArgumentException("BASSDK.SetmKey mKey is null");
+        }
+        ConfigProperties::$mKey = $mKey;
+    }
+
+      /**
+     * Set the clientId during initialization.
+     *
+     * @param  int  $clientId
+     * 
+     */
+    private static function SetClientId(string $clientId): void
+    {
+        if (empty($clientId)) {
+            throw new InvalidArgumentException("BASSDK.SetClientId clientId is null");
+        }
+        ConfigProperties::$clientId = $clientId;
+    }
+    /**
+     * Set the clientSecret during initialization.
+     *
+     * @param  int  $clientSecret
+     * 
+     */
+    private static function SetClientSecret(string $clientSecret): void
+    {
+        if (empty($clientSecret)) {
+            throw new InvalidArgumentException("BASSDK.SetClientSecret clientSecret is null");
+        }
+        ConfigProperties::$clientSecret = $clientSecret;
+    }
+
+      /**
+     * Get the appId .
+     *
+     * @return  string  $appId
+     * 
+     */
+    private static function GetAppId(): string
+    {
+        if (empty( ConfigProperties::$appId)) {
+            throw new InvalidArgumentException("BASSDK.SetAppId appId is null");
+        }
+        return ConfigProperties::$appId;
+    }
+
+        /**
+     * Get the ClientId .
+     *
+     * @return  string  $clientId
+     * 
+     */
+    private static function GetClientId(): string
+    {
+        if (empty( ConfigProperties::$clientId)) {
+            throw new InvalidArgumentException("BASSDK.SetClientId ClientId is null");
+        }
+        return ConfigProperties::$clientId;
+    }
+        /**
+     * Get the ClientSecret .
+     *
+     * @return  string  $clientSecret
+     * 
+     */
+    private static function GetClientSecret(): string
+    {
+        if (empty( ConfigProperties::$clientSecret)) {
+            throw new InvalidArgumentException("BASSDK.SetClientsecret clientsecret is null");
+        }
+        return ConfigProperties::$clientSecret;
+    }
+
+    private static string GetAuthRedirectUrl(): string
+    {
+        if (empty( ConfigProperties::$clientSecret)) {
+            throw new InvalidArgumentException("BASSDK.SetClientsecret clientsecret is null");
+        }
+        return ConfigProperties::$clientSecret;
+    }
+
+
+    
+}
+
+class ConfigProperties {
+    public static $mKey;
+    public static $appId;
+    public static $clientId;
+    public static $clientSecret;
+    public static ENVIRONMENT $environment;
+    public const  BaseUrlSandbox = "https://basgate-sandbox.com";
+    public const  baseUrlStaging = "https://api-tst.basgate.com:4951";
+    public const  baseUrlProduction = "https://api.basgate.com:4950";
+    public const  redirectIrl = "/api/v1/auth/callback";
+}
+
+enum ENVIRONMENT: int {
+    case STAGING = 0;
+    case PRODUCTION = 1;
+    case SANDBOX = 2;
 }
