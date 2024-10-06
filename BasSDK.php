@@ -18,7 +18,7 @@ class BasSDK
     private static $ContentTypeJson =  array('Content-Type: application/json', 'Accept: text/plain');
 
 
-    static public function getUserInfoV2($code)
+    static public function getUserInfo($code): mixed
     {
 
         $token = self::getToken($code);
@@ -31,26 +31,9 @@ class BasSDK
         return null;
     }
 
-    static public function getUserInfo($code)
-    {
-        $data = array();
-        $data['client_secret'] = self::GetClientSecret();
-        $data['client_id'] = self::GetClientId();
-        //$data['grant_type'] = 'authorization_code';
-        $data['code'] = $code;
-        $data['redirect_uri'] = BASEURL . 'auth/callback';
+   
 
-        $token = self::getToken($code);
-        //return $token;
-        if (!is_null($token)) {
-            $header = array('Authorization: Bearer ' . $token);
-            $response =    self::httpGet(BASEURL . "auth/userInfo", null, $header);
-            return json_decode($response, true);
-        }
-        return null;
-    }
-
-    static public function getToken($code): mixed
+        static public function getToken($code)
     {
         $header = array('Content-Type: application/x-www-form-urlencoded');
         $data = array();
@@ -87,7 +70,7 @@ class BasSDK
 
 
         $bodyy['requestTimestamp'] = $requestTimestamp;
-        $bodyy['appId'] = APPID;
+        $bodyy['appId'] = self::GetAppId();
         $bodyy['orderId'] = $orderId;
         $bodyy['orderType'] = 'PayBill';
         $bodyy['amount'] = ['value' => $amount, 'currency' => 'YER'];
@@ -109,12 +92,20 @@ class BasSDK
 
         $req["head"] = $head;
         $req["body"] = $bodyy;
-        $paymentUrl = BASEURL . 'merchant/secure/transaction/initiate';
+        $paymentUrl = self::GetInitiatePaymentUrl();
         $resp = self::httpPost($paymentUrl, json_encode($req), $header);
+         
+        if(self::isSandboxEnvironment()){
+            return  json_decode($resp, true);
+        }
+        //Add Signature
+        $isVerify = BasChecksum::verifySignature($bodyyStr, self::GetMKey(),checksum: $basChecksum );
+        if(!$isVerify){
+            throw new InvalidArgumentException("BASSDK.verifySignature Invalid_response_signature");
+        }
 
         return  json_decode($resp, true);
     }
-
 
     static public function CheckStatus($orderId)
     {
@@ -122,7 +113,7 @@ class BasSDK
         $header = array('Content-Type: application/json');
 
         $bodyy['RequestTimestamp'] = $requestTimestamp;
-        $bodyy['AppId'] = APPID;
+        $bodyy['AppId'] = self::GetAppId();
         $bodyy['OrderId'] = $orderId;
 
 
@@ -139,8 +130,8 @@ class BasSDK
 
 
 
-        $paymentUrl = BASEURL . 'merchant/secure/transaction/status';
-        $resp = self::httpPost($paymentUrl, json_encode($req), $header);
+        $paymentStatusUrl = self::GetPaymentStatusUrl();
+        $resp = self::httpPost($paymentStatusUrl, json_encode($req), $header);
 
         return $resp;
     }
@@ -226,6 +217,30 @@ class BasSDK
          self::SetClientId(clientId: $clientId); 
          self::SetClientSecret(clientSecret: $clientSecret); 
      }
+
+         /**
+     * Get UserInfo V2 
+     *
+     * @param  string  $code
+     * 
+     */
+
+    static public function getUserInfoV2($code)
+    {
+        $header = array('Content-Type: application/x-www-form-urlencoded');
+        $data = array();
+        $data['client_secret'] = self::GetClientSecret();
+        $data['client_id'] = self::GetClientId();
+        $data['code'] = $code;
+        $data['redirect_uri'] = self::GetAuthRedirectUrl();
+        $body = http_build_query($data);
+      
+        if (!is_null($code)) {
+            $response =    self::httpPost(self::GetuserInfoV2Url(), $body, $header);
+            return json_decode($response, true);
+        }
+        return null;
+    }
 
      /**
          * 
@@ -319,6 +334,21 @@ class BasSDK
         return ConfigProperties::$appId;
     }
 
+     /**
+     * Get the appId .
+     *
+     * @return  string  $appId
+     * 
+     */
+    private static function GetMKey(): string
+    {
+        if (empty( ConfigProperties::$mKey)) {
+            throw new InvalidArgumentException("BASSDK.GetMKey mKey is null");
+        }
+        return ConfigProperties::$mKey;
+    }
+
+
         /**
      * Get the ClientId .
      *
@@ -346,17 +376,150 @@ class BasSDK
         return ConfigProperties::$clientSecret;
     }
 
-    private static string GetAuthRedirectUrl(): string
+    private static function GetAuthRedirectUrl(): string
     {
-        if (empty( ConfigProperties::$clientSecret)) {
-            throw new InvalidArgumentException("BASSDK.SetClientsecret clientsecret is null");
+        if (empty( ConfigProperties::redirectUrl)) {
+            throw new InvalidArgumentException("BASSDK.GetAuthRedirectUrl RedirectUrl is null");
         }
-        return ConfigProperties::$clientSecret;
+        return self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::redirectUrl);
     }
+
+    private static function GetuserInfoV2Url(): string
+    {
+        if (empty( ConfigProperties::userInfoV2Url)) {
+            throw new InvalidArgumentException("BASSDK.GetuserInfoV2Url userInfoV2Url is null");
+        }
+       return self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::userInfoV2Url);
+    }
+
+    private static function GetInitiatePaymentUrl(): string
+    {
+        if (empty( ConfigProperties::initiatePaymentUrl)) {
+            throw new InvalidArgumentException("BASSDK.GetInitiatePaymentUrl initiatePaymentUrl is null");
+        }
+       return self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::initiatePaymentUrl);
+    }
+
+    private static function GetPaymentStatusUrl(): string
+    {
+        if (empty(ConfigProperties::paymentStatusUrl)) {
+            throw new InvalidArgumentException("BASSDK.GetPaymentStatusUrl paymentStatusUrl is null");
+        }
+       return self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::paymentStatusUrl);
+    }
+    private static function GetTokenUrl(): string
+    {
+        if (empty(ConfigProperties::tokenUrl)) {
+            throw new InvalidArgumentException("BASSDK.GetTokenUrl tokenUrl is null");
+        }
+       return self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::tokenUrl);
+    }
+    private static function GetMobileFetchAuthUrl(): string
+    {
+        if (empty(ConfigProperties::mobileFetchAuthUrl)) {
+            throw new InvalidArgumentException("BASSDK.GetMobileFetchAuthUrl mobileFetchAuthUrl is null");
+        }
+       return self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::mobileFetchAuthUrl);
+    }
+    
+    private static function GetMobilePaymentUrl(): string
+    {
+        if (empty(ConfigProperties::mobilePaymentUrl)) {
+            throw new InvalidArgumentException("BASSDK.GetMobilePaymentUrl mobilePaymentUrl is null");
+        }
+       return self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::mobilePaymentUrl);
+    }
+
+
+    private static function getTokenV2()
+    {
+        $header = array('Content-Type: application/x-www-form-urlencoded');
+        $data = array();
+        $data['client_secret'] = self::GetClientSecret();
+        $data['client_id'] = self::GetClientId();
+        $data['grant_type'] = 'client_credentials';
+
+        //return http_build_query($data) . "\n";
+        $body = http_build_query($data);
+        $response =    self::httpPost(self::GetTokenUrl(), $body, $header);
+        $response = json_decode($response, true);
+        if (!is_array($response)) {
+            //  echo "is Not Array ".$response;
+            return null;
+        } else {
+
+            if (array_key_exists('access_token', $response)) {
+                //  $response=json_decode($response, true);
+                // echo $response;
+                return $response['access_token'];
+            }
+        }
+
+        return $response;
+    }
+
+    private static function isSandboxEnvironment() {
+        return ConfigProperties::$environment == ENVIRONMENT::SANDBOX;
+    }
+
+    public static function SendNotificationToCustomer($templateName, $orderId, $orderParams, $firebasePayload, $extraPayload): mixed
+    {
+        $accessToken = self::getTokenV2();
+        if (!is_null($accessToken)) {
+            throw new InvalidArgumentException("BASSDK.SendNotificationToCustomer accessToken is null");
+        }
+        $header = array();
+        $header['Authorization'] = $accessToken;
+        $header['scheme'] = 'Bearer';
+        $header['AppId'] = self::GetAppId();
+        
+        $data = array();
+        $data['orderId'] = $orderId;
+        $data['extraPayload'] = $extraPayload;
+        $data['firebasePayload'] = $firebasePayload;
+        $data['orderParams'] = $orderParams;
+        $data['templateName'] = $templateName;
+
+        $body = http_build_query($data);
+        $url = self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::notificationUrl);
+        $response = self::httpPost( $url, $body, header: $header);
+        return json_decode($response, true);
+    }
+    public static function SimulateMobileFetchAuthAsync($clientId): mixed {
+        if(!self::isSandboxEnvironment()){
+            throw new InvalidArgumentException('This method is only available on Sandbox environment');
+        }
+        $url = self::GetMobileFetchAuthUrl();
+        $fulUrl = $url . "?clientId=" . urlencode($clientId);
+        $response = self::httpPost( $fulUrl, null, header: null);  
+        return $response;  
+        
+    }
+
+    public static function SimulateMobilePaymentAsync($orderId,$amount, $token): mixed {
+        if(!self::isSandboxEnvironment()){
+            throw new InvalidArgumentException('This method is only available on Sandbox environment');
+        }
+
+        $data = array();
+        $data['appId'] = self::GetAppId();
+        $data['orderId'] = $orderId;
+        $data['trxToken'] = $token;
+        $data['amount'] = ['value' => $amount, 'currency' => 'YER'];
+
+        $body = http_build_query($data);
+        $url = self::GetMobilePaymentUrl();
+        $response = self::httpPost( $url, $body, header: null);  
+        return $response;  
+        
+    }
+
+    
 
 
     
 }
+
 
 class ConfigProperties {
     public static $mKey;
@@ -367,7 +530,15 @@ class ConfigProperties {
     public const  BaseUrlSandbox = "https://basgate-sandbox.com";
     public const  baseUrlStaging = "https://api-tst.basgate.com:4951";
     public const  baseUrlProduction = "https://api.basgate.com:4950";
-    public const  redirectIrl = "/api/v1/auth/callback";
+    public const  redirectUrl = "/api/v1/auth/callback";
+    public const  userInfoV2Url = "/api/v1/auth/secure/userinfo";
+    public const  initiatePaymentUrl = "/api/v1/merchant/secure/transaction/initiate";
+    public const  paymentStatusUrl = "/api/v1/merchant/secure/transaction/status";
+    public const  notificationUrl = "/api/v1/merchant/secure/notifications/send-to-customer";
+    public const  tokenUrl = "/api/v1/auth/token";
+    public const  mobileFetchAuthUrl = "/api/v1/mobile/fetchAuth";
+    public const  mobilePaymentUrl = "/api/v1/mobile/payment";
+    
 }
 
 enum ENVIRONMENT: int {
