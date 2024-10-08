@@ -1,4 +1,7 @@
 <?php
+
+use PSpell\Config;
+
 include('BasSDK.php');
 
 
@@ -24,6 +27,7 @@ include('BasSDK.php');
         LOGIN
     </h4>
     <form method="post">
+        <input type="submit" name="initialize" class="button" value="initialize" />
         <input type="submit" name="login" class="button" value="login" />
 
         <input type="submit" name="userinfo" class="button" value="userinfo" />
@@ -41,6 +45,18 @@ include('BasSDK.php');
     } else if (array_key_exists('status', $_POST)) {
         CheckStatus();
     }
+    else if (array_key_exists('initialize', $_POST)) {
+        initialize();
+    }
+    function initialize()
+    {   
+        $initil = BasSDK::Initialize(ENVIRONMENT::SANDBOX,
+        mKey:'AAECAwQFBgcICQoLDA0ODw==',
+        appId:'fdd4b312-c451-40fc-adc5-7c2ed83c4324',
+        clientId:'395b0e88-ad46-4692-b797-cedbd2f33d1f',
+        clientSecret:'2215d201-9c2c-4870-b5fd-a7cfc6268b83' );
+
+    }
     function login()
     {
         $response = '<script>oauthToken();</script>';
@@ -53,16 +69,16 @@ include('BasSDK.php');
 
         $callBackUrl = "";
         $orderid = rand();
-
+        $appId = "453a95c0-1efa-4c9c-8341-392eb44d34f2";
         $amount = rand(100, 10000);
-        $order = BasSDK::Init($orderid, $amount, $callBackUrl, 10, ["id" => 100]);
+        $order = BasSDK::Init($orderid, $amount, $callBackUrl, customerInfoId: 10, orderDetails: ["id" => 100]);
         //echo $order;
         $trxToken = $order['body']['trxToken'];
         $orderid = $order['body']['order']['orderId'];
         //echo "trxToken: ".$trxToken,nl2br("\n");
         //  echo "orderid: ".$orderid.nl2br("\n");
         echo "<div id=orderid>";
-        echo htmlspecialchars($orderid); // put as the div content
+       // echo htmlspecialchars($orderid); // put as the div content
         echo "</div>";
         echo "<div id=trxToken>";
         echo htmlspecialchars($trxToken); // put as the div content
@@ -71,17 +87,29 @@ include('BasSDK.php');
         echo htmlspecialchars($amount); // put as the div content
         echo "</div>";
         echo "<div id=appid>";
-        echo htmlspecialchars(APPID); // put as the div content
+        echo htmlspecialchars($appId); // put as the div content
         echo "</div>";
 
         echo '<script>getPayment();</script>';
     }
     function CheckStatus()
     {
-        $invoice = json_decode($_COOKIE["PaymentResult"]);
+        if (isset($_COOKIE["PaymentResult"])) {
+            // Decode the cookie if it exists
+            $invoice = json_decode($_COOKIE["PaymentResult"], true); // `true` to convert it to an associative array
+            // You can now safely access $invoice
+            print_r($invoice);
+        } else {
+            // Handle the case where the cookie is not set
+            echo "PaymentResult cookie not found.";
+        }
+
+        
+        //$invoice = json_decode($_COOKIE["PaymentResult"]);
         $status =   $invoice->status;
         echo nl2br("\n");
         $orderid =   $invoice->data->orderId;
+        //$orderid = "5836";
 
         echo "status: " . $status . nl2br("\n");
         echo "orderid " . $orderid . nl2br("\n");
@@ -91,7 +119,18 @@ include('BasSDK.php');
     }
     function userinfo()
     {
-        $response = json_decode($_COOKIE["AuthCode"]);
+
+      //  echo ConfigProperties::$environment->value;
+        //$response = json_decode($_COOKIE["AuthCode"]);
+       // echo "intialized client id is: " . ConfigProperties::$clientId;
+       //$clientId = "395b0e88-ad46-4692-b797-cedbd2f33d1f";
+       $clientId = "453a95c0-1efa-4c9c-8341-392eb44d34f2";
+       echo"Client Id is >> ". $clientId .nl2br("\n");
+        $response = BasSDK::SimulateMobileFetchAuthAsync(clientId: $clientId);
+        $authid =   $response->data->authId;
+        echo "Auth Id is: " .$authid .nl2br("\n");
+    
+        //echo 'fetchAuthResponse '. $response .  nl2br("\n");
         //var_dump($response);
         $status =   $response->status;
         echo nl2br("\n");
@@ -104,7 +143,7 @@ include('BasSDK.php');
         echo nl2br("\n");
         if ($status == 1) {
 
-            $user_response = BasSDK::getUserInfo($authid);
+            $user_response = BasSDK::getUserInfoV2($authid);
             if (is_null($user_response)) {
                 echo nl2br("\n"), "Step2-GetUserInfo: Status= 0", nl2br("\n"), nl2br("\n");
                 echo "Error Can't get Token";
