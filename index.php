@@ -125,10 +125,8 @@ include('BasSDK.php');
        // echo "intialized client id is: " . ConfigProperties::$clientId;
        //$clientId = "395b0e88-ad46-4692-b797-cedbd2f33d1f";
        $clientId = "453a95c0-1efa-4c9c-8341-392eb44d34f2";
-       echo"Client Id is >> ". $clientId .nl2br("\n");
         $response = BasSDK::SimulateMobileFetchAuthAsync(clientId: $clientId);
         $authid =   $response->data->authId;
-        echo "Auth Id is: " .$authid .nl2br("\n");
     
         //echo 'fetchAuthResponse '. $response .  nl2br("\n");
         //var_dump($response);
