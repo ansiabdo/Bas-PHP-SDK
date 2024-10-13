@@ -65,7 +65,7 @@ function getPayment() {
     }, false);
 }
 function basPayment() {
-
+    console.log("basPayment function called"); // Debugging line
     const orderid = document.getElementById("orderid").textContent;
     const trxToken = document.getElementById("trxToken").textContent;
     const amount = document.getElementById("amount").textContent;
@@ -85,6 +85,7 @@ function basPayment() {
         "transactionToken": trxToken,
         "appId": appid
     }).then(function (result) {
+        console.log("Result from JSBridge call:", result);
         createCookie("PaymentResult", JSON.stringify(result), "10");
         alert(JSON.stringify(result));
         return JSON.stringify(result);
