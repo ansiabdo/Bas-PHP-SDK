@@ -71,7 +71,7 @@ class BasChecksum
 		return self::generateSignatureByString($params, $key);
 	}
 
-	static public function verifySignature($params, $key, $checksum)
+	static public function verifySignature($params, $key, $checksum): bool
 	{
 		if (!is_array($params) && !is_string($params)) {
 			throw new Exception("string or array expected, " . gettype($params) . " given");
