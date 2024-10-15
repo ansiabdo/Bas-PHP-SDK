@@ -1,29 +1,17 @@
-function oauthToken() {
-    window.addEventListener("JSBridgeReady", (event) => {
+function oauthToken(clientId) {
+    window.addEventListener("JSBridgeReady", async (event) => {
         console.log("JSBridgeReady fired");
         //to do anything you want after SDK is ready
-        basFetchAuthCode();
+        return await basFetchAuthCode(clientId);
     }, false);
 }
-function basFetchAuthCode() {
+
+async function basFetchAuthCode(clientId) {
     JSBridge.call('basFetchAuthCode', {
-        clientId: "395b0e88-ad46-4692-b797-cedbd2f33d1f"
+        clientId: clientId
     }).then(function (result) {
         /****** Response Example ******/
         alert(JSON.stringify(result));
-
-        createCookie("AuthCode", JSON.stringify(result), "10");
-
-        $.ajax({
-            type: "POST",
-            url: 'userinfo.php',
-            data: result,
-            success: function (data) {
-
-            }, error: function (data) {
-
-            }
-        });
         /*   {
                 "status": 1,
                 "data": {
@@ -32,6 +20,17 @@ function basFetchAuthCode() {
                 },
                 "messages": [""]
             }*/
+        try {
+            if (result) {
+                if (result.status && result.status == 1) {
+                    console.log("AuthCode :", result?.data?.auth_id)
+                    createCookie("AuthCode", result?.data?.auth_id, "10");
+                }
+            }
+        } catch (error) {
+            console.error("ERROR on basFetchAuthCode:", JSON.stringify(error))
+        }
+
         return JSON.stringify(result);
 
         /****** End Response Example ******/
@@ -41,6 +40,7 @@ function basFetchAuthCode() {
     // Function to create the cookie
 
 }
+
 function createCookie(name, value, days) {
     var expires;
 
@@ -52,9 +52,9 @@ function createCookie(name, value, days) {
     else {
         expires = "";
     }
-
-    document.cookie = escape(name) + "=" +
-        escape(value) + expires + "; path=/";
+    // Delete the old cookie if it exists
+    document.cookie = escape(name) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+    document.cookie = escape(name) + "=" + escape(value) + expires + "; path=/";
 }
 
 function getPayment() {
@@ -64,16 +64,13 @@ function getPayment() {
         basPayment();
     }, false);
 }
+
 function basPayment() {
     console.log("basPayment function called"); // Debugging line
     const orderid = document.getElementById("orderid").textContent;
     const trxToken = document.getElementById("trxToken").textContent;
     const amount = document.getElementById("amount").textContent;
     const appid = document.getElementById("appid").textContent;
-
-
-
-    // alert(orderid);
 
     JSBridge.call('basPayment', {
 

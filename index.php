@@ -17,7 +17,7 @@ function init()
     );
     echo 'Intialized environment : ' . BasSDK::GetEnvironmentValue();
 }
-// init()
+init();
 ?>
 <!DOCTYPE html>
 <html>
@@ -40,20 +40,42 @@ function init()
         LOGIN
     </h4>
     <form method="post">
-        <!-- <input type="submit" name="initialize" class="button" value="initialize" /> -->
-        <input type="submit" name="login" class="button" value="login" />
-        <input type="submit" name="userinfo" class="button" value="userinfo" />
-        <input type="submit" name="order" class="button" value="New order" />
-        <input type="submit" name="status" class="button" value="Order status" />
-        <br>
-        <br>
-        <input type="submit" name="simulate_userinfo" class="button" value="Simulate Userinfo" />
-        <input type="submit" name="simulateOrder" class="button" value="Simulate order" />
-
+        <?php
+        if (BasSDK::GetEnvironmentValue() !== "sandbox"):
+        ?>
+            <div style="text-align: center;">
+                <!-- <input type="submit" name="initialize" class="button" value="initialize" /> -->
+                <input type="submit" name="login" class="button" value="login" />
+                <input type="submit" name="userinfo" class="button" value="userinfo" />
+                <input type="submit" name="order" class="button" value="New order" />
+                <input type="submit" name="status" class="button" value="Order status" />
+            </div>
+        <?php
+        endif;
+        ?>
+        <?php
+        if (BasSDK::GetEnvironmentValue() === "sandbox"):
+        ?>
+            <br>
+            <br>
+            <div style="text-align: center;">
+                <span>
+                    <h4>using this only on SandBox Environment</h4>
+                </span>
+            </div>
+            <br>
+            <div style="text-align: center;">
+                <input type="submit" name="simulate_userinfo" class="button" value="Simulate Userinfo" />
+                <input type="submit" name="simulateOrder" class="button" value="Simulate order" />
+            </div>
+        <?php
+        endif;
+        ?>
 
     </form>
 
     <?php
+
     if (array_key_exists('login', $_POST)) {
         login();
     } else if (array_key_exists('userinfo', $_POST)) {
@@ -69,6 +91,7 @@ function init()
     } else if (array_key_exists('simulateOrder', $_POST)) {
         Simulateorder();
     }
+
     function initialize()
     {
 
@@ -82,17 +105,20 @@ function init()
         //echo('intialized environment  kxis: '.ConfigProperties::$environment->value);
 
     }
+
     function login()
     {
-        $response = '<script>oauthToken();</script>';
-
+    ?>
+        <script>
+            var x = await oauthToken(' . BasSDK::GetClientId() . ');
+        </script>';
+    <?php
         echo "This is Button1 that is selected";
-        echo $response;
     }
 
     function SimulateUserInfo(): void
     {
-        $clientId = bassdk::GetClientId();
+        $clientId = BasSDK::GetClientId();
         $response = BasSDK::SimulateMobileFetchAuthAsync(clientId: $clientId);
         $status    = $response->status;
         $code      = $response->code;
@@ -104,32 +130,39 @@ function init()
         //echo "AuthId: " . $authid, nl2br("\n");
 
     }
+
     function UserinfoV2()
     {
 
         // $authid = "B0CAE2FC89B9E5C6D9D8B5DF2AE5DAF94D13491E9376E11469119DD1A2FB3375";
-        $clientId = BasSDK::GetClientId();
-        $user_response = BasSDK::getUserInfoV2($clientId);
-        if (is_null($user_response)) {
-            echo nl2br("\n"), "GetUserInfo: Status= 0", nl2br("\n"), nl2br("\n");
-            echo "Error Can't get Token";
-            return;
-        }
-        $user_status    = $user_response['status'];
-        $user_code      = $user_response['code'];
-        if ($user_status == 1) {
-            echo "GetUserInfo: Status= " . $user_status . " Code: " . $user_code, nl2br("\n"), nl2br("\n");
-            $open_id =   $user_response['data']['open_id'];
-            $user_name = $user_response['data']['user_name'];
-            $name =      $user_response['data']['name'];
-            $phone =     $user_response['data']['phone'];
+        $authCode = isset($_COOKIE['AuthCode']) ? $_COOKIE['AuthCode'] : null;
+        if (!is_null($authCode)) {
+            echo "AuthCode: " . htmlspecialchars($authCode) . nl2br("\n");
 
-            // echo "\n My Name: " . $name;
-            // echo "\n Open Id: " . $open_id;
+            $user_response = BasSDK::getUserInfoV2($authCode);
+            if (is_null($user_response)) {
+                echo nl2br("\n"), "GetUserInfo: Status= 0", nl2br("\n"), nl2br("\n");
+                echo "Error Can't get Token";
+                return;
+            }
+            $user_status    = $user_response['status'];
+            $user_code      = $user_response['code'];
+            if ($user_status == 1) {
+                $open_id =   $user_response['data']['open_id'];
+                $user_name = $user_response['data']['user_name'];
+                $name =      $user_response['data']['name'];
+                $phone =     $user_response['data']['phone'];
+
+                echo "GetUserInfo: Status= " . $user_status . " User_Name: " . $user_name, nl2br("\n"), nl2br("\n");
+                // echo "\n My Name: " . $name;
+                // echo "\n Open Id: " . $open_id;
+            } else {
+                echo "GetUserInfo: Status= " . $user_status . " Code: " . $user_code, nl2br("\n"), nl2br("\n");
+                $message = $user_response['messages'][0];
+                echo $message;
+            }
         } else {
-            echo "GetUserInfo: Status= " . $user_status . " Code: " . $user_code, nl2br("\n"), nl2br("\n");
-            $message = $user_response['messages'][0];
-            echo $message;
+            echo "AuthCode cookie not found." . nl2br("\n");
         }
     }
 

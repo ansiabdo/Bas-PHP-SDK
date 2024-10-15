@@ -31,8 +31,6 @@ class BasSDK
         return null;
     }
 
-
-
     static public function getToken($code)
     {
         $header = array('Content-Type: application/x-www-form-urlencoded');
@@ -378,7 +376,6 @@ class BasSDK
         return ConfigProperties::$mKey;
     }
 
-
     /**
      * Get the ClientId .
      *
@@ -392,6 +389,7 @@ class BasSDK
         }
         return ConfigProperties::$clientId;
     }
+
     /**
      * Get the ClientSecret .
      *
