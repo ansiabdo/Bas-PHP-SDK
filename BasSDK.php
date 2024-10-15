@@ -60,8 +60,53 @@ class BasSDK
     // }
     //#endregion
 
-
     static public function Init($orderId, $amount, $callBackUrl, $customerInfoId, $orderDetails)
+    {
+        $reqBody = '{"head":{"signature":"sigg","requestTimeStamp":"timess"},"body":bodyy}';
+        $header = array('Accept: text/plain', 'Content-Type: application/json');
+        //  $config=include('config.php');
+        $requestTimestamp = '1678695536';
+
+
+        $bodyy['requestTimestamp'] = $requestTimestamp;
+        $bodyy['appId'] = self::GetAppId();
+        $bodyy['orderId'] = $orderId;
+        $bodyy['orderType'] = 'PayBill';
+        $bodyy['amount'] = ['value' => $amount, 'currency' => 'YER'];
+
+        $bodyy['callBackUrl'] = $callBackUrl;
+
+        $bodyy['customerInfo'] = ['id' => $customerInfoId, 'name' => 'Test'];
+        $bodyy['orderDetails'] = $orderDetails;
+
+        $bodyyStr = json_encode($bodyy);
+        
+        $basChecksum = BasChecksum::generateSignature($bodyyStr, self::GetMKey());
+    /* prepare JSON string for request */
+    $reqBody = str_replace('bodyy', $bodyyStr, $reqBody);
+    $reqBody = str_replace('sigg', $basChecksum, $reqBody);
+    $reqBody = str_replace('timess', $requestTimestamp, $reqBody);
+        $head["signature"] = $basChecksum;
+        $head["requestTimestamp"] = $requestTimestamp;
+
+
+        $req["head"] = $head;
+        $req["body"] = $bodyy;
+        $paymentUrl = self::GetInitiatePaymentUrl();
+        $resp = self::httpPost($paymentUrl, json_encode($req), $header);
+         //return $resp;
+        if(self::isSandboxEnvironment()){
+            return  json_decode($resp, true);
+        }
+        //Add Signature
+        $isVerify = BasChecksum::verifySignature($bodyyStr, self::GetMKey(),checksum: $basChecksum );
+        if(!$isVerify){
+            throw new InvalidArgumentException("BASSDK.verifySignature Invalid_response_signature");
+        }
+
+        return  json_decode($resp, true);
+    }
+    static public function Init2($orderId, $amount, $callBackUrl, $customerInfoId, $orderDetails)
     {
         $reqBody = '{"head":{"signature":"sigg","requestTimeStamp":"timess"},"body":bodyy}';
         //  $config=include('config.php');

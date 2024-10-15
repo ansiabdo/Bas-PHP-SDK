@@ -22,7 +22,7 @@ function init($env)
             $env,
             clientId: '653ed1ff-59cb-41aa-8e7f-0dc5b885a024',
             clientSecret: 'd93fbc8c-877b-4b8d-b822-e6dcdaf4b429',
-            appId: 'f4871cb-b5ed-487e-baae-b6301f29db08',
+            appId: '8f4871cb-b5ed-487e-baae-b6301f29db08',
             openId: '848a8f7d-3058-ab15-83ac-146eb2654d16',
             mKey: 'cmJsckQ1Nlh1S0FZVjJqQg==',
         );
@@ -204,9 +204,10 @@ init(ENVIRONMENT::STAGING);
         $callBackUrl = "";
         $orderid = (string) time();    
         $amount = rand(100, 10000);
-        $name = "Test";
-        //$order = BasSDK::Init($orderid, $amount, $callBackUrl, customerInfoId: $openId, orderDetails: ["id" => 100]);
-        $order = BasSDKHelper::init_payment($orderid, $amount, $callBackUrl, customerInfoName: $name);
+        //$name = "Test";
+        $name = "75b32f99-5fe6-496f-8849-a5dedeb0a65f";
+        $order = BasSDK::Init($orderid, $amount, $callBackUrl, customerInfoId: $name, orderDetails: ["id" => 100]);
+        //$order = BasSDKHelper::init_payment($orderid, $amount, $callBackUrl, customerInfoName: $name);
         //echo "<pre>";
         print_r($order);
         //echo $order;
