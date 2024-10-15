@@ -10,11 +10,11 @@ function init($env)
     if ($env === "sandbox") {
         $initil = BasSDK::Initialize(
             $env,
-            clientId: '653ed1ff-59cb-41aa-8e7f-0dc5b885a024',
-            clientSecret: 'd93fbc8c-877b-4b8d-b822-e6dcdaf4b429',
-            appId: 'f4871cb-b5ed-487e-baae-b6301f29db08',
-            openId: '848a8f7d-3058-ab15-83ac-146eb2654d16',
-            mKey: 'cmJsckQ1Nlh1S0FZVjJqQg==',
+            clientId: '453a95c0-1efa-4c9c-8341-392eb44d34f2',
+            clientSecret: '453a95c0-1efa--83ac-146eb2654d16',
+            appId: 'ac90ddd1-6627-4ae9-b268-98c17bd8ee6c',
+            openId: '848a8f7d-3058-ab15-a90b-132816bef156',
+            mKey: '',
         );
     } else {
         $initil = BasSDK::Initialize(
@@ -71,9 +71,7 @@ init(ENVIRONMENT::STAGING);
             <br>
             <br>
             <div style="text-align: center;">
-                <span>
-                    <h4>using this only on SandBox Environment</h4>
-                </span>
+                <h4>SandBox Environment</h4>
             </div>
             <br>
             <div style="text-align: center;">
