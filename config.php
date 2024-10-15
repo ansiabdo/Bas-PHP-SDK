@@ -1,9 +1,6 @@
 <?php
 
 
-const BASEURL = 'https://api-tst.basgate.com:4951/api/v1/';
-const paymenturl = '/api/v1/merchant/secure/transaction/initiate';
-
 
 //Auth client credential
 const CLIENT_ID = '<<YOUR-CLIENT-ID>>';

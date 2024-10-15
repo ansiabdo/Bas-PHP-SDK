@@ -2,11 +2,11 @@ function oauthToken(clientId) {
     window.addEventListener("JSBridgeReady", async (event) => {
         console.log("JSBridgeReady fired");
         //to do anything you want after SDK is ready
-        return await basFetchAuthCode(clientId);
+        return basFetchAuthCode(clientId);
     }, false);
 }
 
-async function basFetchAuthCode(clientId) {
+function basFetchAuthCode(clientId) {
     JSBridge.call('basFetchAuthCode', {
         clientId: clientId
     }).then(function (result) {

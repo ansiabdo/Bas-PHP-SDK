@@ -18,47 +18,48 @@ class BasSDK
     private static $ContentTypeJson =  array('Content-Type: application/json', 'Accept: text/plain');
 
 
-    static public function getUserInfo($code): mixed
-    {
+    //#region Old
 
-        $token = self::getToken($code);
-        //return $token;
-        if (!is_null($token)) {
-            $header = array('Authorization: Bearer ' . $token);
-            $response =    self::httpGet(BASEURL . "auth/userInfo", null, $header);
-            return json_decode($response, true);
-        }
-        return null;
-    }
+    // static public function getUserInfo($code): mixed
+    // {
+    //     $token = self::getToken($code);
+    //     //return $token;
+    //     if (!is_null($token)) {
+    //         $header = array('Authorization: Bearer ' . $token);
+    //         $response =    self::httpGet(BASEURL . "auth/userInfo", null, $header);
+    //         return json_decode($response, true);
+    //     }
+    //     return null;
+    // }
+    // static public function getToken($code)
+    // {
+    //     $header = array('Content-Type: application/x-www-form-urlencoded');
+    //     $data = array();
+    //     $data['client_secret'] = CLIENT_SECRET;
+    //     $data['client_id'] = CLIENT_ID;
+    //     $data['grant_type'] = 'authorization_code';
+    //     $data['code'] = $code;
+    //     $data['redirect_uri'] = BASEURL . 'auth/callback';
 
-    static public function getToken($code)
-    {
-        $header = array('Content-Type: application/x-www-form-urlencoded');
-        $data = array();
-        $data['client_secret'] = CLIENT_SECRET;
-        $data['client_id'] = CLIENT_ID;
-        $data['grant_type'] = 'authorization_code';
-        $data['code'] = $code;
-        $data['redirect_uri'] = BASEURL . 'auth/callback';
+    //     //return http_build_query($data) . "\n";
+    //     $body = http_build_query($data);
+    //     $response =    self::httpPost(BASEURL . "auth/token", $body, $header);
+    //     $response = json_decode($response, true);
+    //     if (!is_array($response)) {
+    //         //  echo "is Not Array ".$response;
+    //         return null;
+    //     } else {
 
-        //return http_build_query($data) . "\n";
-        $body = http_build_query($data);
-        $response =    self::httpPost(BASEURL . "auth/token", $body, $header);
-        $response = json_decode($response, true);
-        if (!is_array($response)) {
-            //  echo "is Not Array ".$response;
-            return null;
-        } else {
+    //         if (array_key_exists('access_token', $response)) {
+    //             //  $response=json_decode($response, true);
+    //             // echo $response;
+    //             return $response['access_token'];
+    //         }
+    //     }
+    //     return $response;
+    // }
+    //#endregion
 
-            if (array_key_exists('access_token', $response)) {
-                //  $response=json_decode($response, true);
-                // echo $response;
-                return $response['access_token'];
-            }
-        }
-
-        return $response;
-    }
 
     static public function Init($orderId, $amount, $callBackUrl, $customerInfoId, $orderDetails)
     {

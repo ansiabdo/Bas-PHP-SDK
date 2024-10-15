@@ -4,20 +4,32 @@ use PSpell\Config;
 
 include('BasSDK.php');
 
-function init()
+function init($env)
 {
 
-    $initil = BasSDK::Initialize(
-        ENVIRONMENT::STAGING,
-        clientId: '653ed1ff-59cb-41aa-8e7f-0dc5b885a024',
-        clientSecret: 'd93fbc8c-877b-4b8d-b822-e6dcdaf4b429',
-        appId: 'f4871cb-b5ed-487e-baae-b6301f29db08',
-        openId: '848a8f7d-3058-ab15-83ac-146eb2654d16',
-        mKey: 'cmJsckQ1Nlh1S0FZVjJqQg==',
-    );
+    if ($env === "sandbox") {
+        $initil = BasSDK::Initialize(
+            $env,
+            clientId: '653ed1ff-59cb-41aa-8e7f-0dc5b885a024',
+            clientSecret: 'd93fbc8c-877b-4b8d-b822-e6dcdaf4b429',
+            appId: 'f4871cb-b5ed-487e-baae-b6301f29db08',
+            openId: '848a8f7d-3058-ab15-83ac-146eb2654d16',
+            mKey: 'cmJsckQ1Nlh1S0FZVjJqQg==',
+        );
+    } else {
+        $initil = BasSDK::Initialize(
+            $env,
+            clientId: '653ed1ff-59cb-41aa-8e7f-0dc5b885a024',
+            clientSecret: 'd93fbc8c-877b-4b8d-b822-e6dcdaf4b429',
+            appId: 'f4871cb-b5ed-487e-baae-b6301f29db08',
+            openId: '848a8f7d-3058-ab15-83ac-146eb2654d16',
+            mKey: 'cmJsckQ1Nlh1S0FZVjJqQg==',
+        );
+    }
+
     echo 'Intialized environment : ' . BasSDK::GetEnvironmentValue();
 }
-init();
+init(ENVIRONMENT::STAGING);
 ?>
 <!DOCTYPE html>
 <html>
@@ -108,11 +120,14 @@ init();
 
     function login()
     {
+        if (BasSDK::GetEnvironmentValue() !== "sandbox") {
     ?>
-        <script>
-            var x = await oauthToken(' . BasSDK::GetClientId() . ');
-        </script>';
+            <script>
+                var x = await oauthToken(' . BasSDK::GetClientId() . ');
+            </script>';
     <?php
+        }
+
         echo "This is Button1 that is selected";
     }
 
