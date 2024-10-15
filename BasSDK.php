@@ -468,7 +468,6 @@ class BasSDK
         return self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::$mobilePaymentUrl);
     }
 
-
     private static function getTokenV2()
     {
         $header = array('Content-Type: application/x-www-form-urlencoded');
