@@ -159,7 +159,7 @@ class BasSDK
 
         $bodyyStr = json_encode($bodyy);
 
-        $basChecksum = BasChecksum::generateSignature($bodyyStr, MKEY);
+        $basChecksum = BasChecksum::generateSignature($bodyyStr, self::GetMKey());
 
         $head["Signature"] = $basChecksum;
         $head["RequestTimestamp"] = $requestTimestamp;
