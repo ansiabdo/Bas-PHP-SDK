@@ -4,16 +4,18 @@ use PSpell\Config;
 
 include('BasSDK.php');
 
-function init (){
- 
-    $initil = BasSDK::Initialize(ENVIRONMENT::STAGING,
-    clientId:'653ed1ff-59cb-41aa-8e7f-0dc5b885a024',
-    clientSecret:'d93fbc8c-877b-4b8d-b822-e6dcdaf4b429',
-    appId:'f4871cb-b5ed-487e-baae-b6301f29db08',
-    openId: '848a8f7d-3058-ab15-83ac-146eb2654d16',
-    mKey:'cmJsckQ1Nlh1S0FZVjJqQg==',
+function init()
+{
+
+    $initil = BasSDK::Initialize(
+        ENVIRONMENT::STAGING,
+        clientId: '653ed1ff-59cb-41aa-8e7f-0dc5b885a024',
+        clientSecret: 'd93fbc8c-877b-4b8d-b822-e6dcdaf4b429',
+        appId: 'f4871cb-b5ed-487e-baae-b6301f29db08',
+        openId: '848a8f7d-3058-ab15-83ac-146eb2654d16',
+        mKey: 'cmJsckQ1Nlh1S0FZVjJqQg==',
     );
-        echo 'Intialized environment : '. BasSDK::GetEnvironmentValue();
+    echo 'Intialized environment : ' . BasSDK::GetEnvironmentValue();
 }
 // init()
 ?>
@@ -40,11 +42,15 @@ function init (){
     <form method="post">
         <!-- <input type="submit" name="initialize" class="button" value="initialize" /> -->
         <input type="submit" name="login" class="button" value="login" />
-        <input type="submit" name="simulate_userinfo" class="button" value="Simulate Userinfo" />
         <input type="submit" name="userinfo" class="button" value="userinfo" />
-        <input type="submit" name="simulateOrder" class="button" value="Simulate order" />
         <input type="submit" name="order" class="button" value="New order" />
         <input type="submit" name="status" class="button" value="Order status" />
+        <br>
+        <br>
+        <input type="submit" name="simulate_userinfo" class="button" value="Simulate Userinfo" />
+        <input type="submit" name="simulateOrder" class="button" value="Simulate order" />
+
+
     </form>
 
     <?php
@@ -52,24 +58,20 @@ function init (){
         login();
     } else if (array_key_exists('userinfo', $_POST)) {
         UserinfoV2();
-    } 
-    else if (array_key_exists('simulate_userinfo', $_POST)) {
+    } else if (array_key_exists('simulate_userinfo', $_POST)) {
         SimulateUserInfo();
-    }
-    else if (array_key_exists('order', $_POST)) {
+    } else if (array_key_exists('order', $_POST)) {
         orderV2();
     } else if (array_key_exists('status', $_POST)) {
         CheckStatusV2();
-    }
-    else if (array_key_exists('initialize', $_POST)) {
+    } else if (array_key_exists('initialize', $_POST)) {
         initialize();
-    }
-    else if (array_key_exists('simulateOrder', $_POST)) {
-            Simulateorder();
+    } else if (array_key_exists('simulateOrder', $_POST)) {
+        Simulateorder();
     }
     function initialize()
-    {   
-       
+    {
+
         //ConfigProperties::SetEnvironment(ENVIRONMENT::STAGING);
         //echo ConfigProperties::GetEnvironmentValue();
         // $initil = BasSDK::Initialize(ENVIRONMENT::STAGING,
@@ -88,7 +90,7 @@ function init (){
         echo $response;
     }
 
-    function SimulateUserInfo ()   : void 
+    function SimulateUserInfo(): void
     {
         $clientId = bassdk::GetClientId();
         $response = BasSDK::SimulateMobileFetchAuthAsync(clientId: $clientId);
@@ -104,47 +106,45 @@ function init (){
     }
     function UserinfoV2()
     {
-       
-           // $authid = "B0CAE2FC89B9E5C6D9D8B5DF2AE5DAF94D13491E9376E11469119DD1A2FB3375";
-            $clientId = BasSDK::GetClientId();
-            $user_response = BasSDK::getUserInfoV2($clientId);
-            if (is_null($user_response)) {
-                echo nl2br("\n"), "GetUserInfo: Status= 0", nl2br("\n"), nl2br("\n");
-                echo "Error Can't get Token";
-                return;
-            }
-            $user_status    = $user_response['status'];
-            $user_code      = $user_response['code'];
-            if ($user_status == 1) {
-                echo "GetUserInfo: Status= " . $user_status . " Code: " . $user_code, nl2br("\n"), nl2br("\n");
-                $open_id =   $user_response['data']['open_id'];
-                $user_name = $user_response['data']['user_name'];
-                $name =      $user_response['data']['name'];
-                $phone =     $user_response['data']['phone'];
 
-                // echo "\n My Name: " . $name;
-                // echo "\n Open Id: " . $open_id;
-            } else {
-                echo "GetUserInfo: Status= " . $user_status . " Code: " . $user_code, nl2br("\n"), nl2br("\n");
-                $message = $user_response['messages'][0];
-                echo $message;
-            }
-         
+        // $authid = "B0CAE2FC89B9E5C6D9D8B5DF2AE5DAF94D13491E9376E11469119DD1A2FB3375";
+        $clientId = BasSDK::GetClientId();
+        $user_response = BasSDK::getUserInfoV2($clientId);
+        if (is_null($user_response)) {
+            echo nl2br("\n"), "GetUserInfo: Status= 0", nl2br("\n"), nl2br("\n");
+            echo "Error Can't get Token";
+            return;
+        }
+        $user_status    = $user_response['status'];
+        $user_code      = $user_response['code'];
+        if ($user_status == 1) {
+            echo "GetUserInfo: Status= " . $user_status . " Code: " . $user_code, nl2br("\n"), nl2br("\n");
+            $open_id =   $user_response['data']['open_id'];
+            $user_name = $user_response['data']['user_name'];
+            $name =      $user_response['data']['name'];
+            $phone =     $user_response['data']['phone'];
 
+            // echo "\n My Name: " . $name;
+            // echo "\n Open Id: " . $open_id;
+        } else {
+            echo "GetUserInfo: Status= " . $user_status . " Code: " . $user_code, nl2br("\n"), nl2br("\n");
+            $message = $user_response['messages'][0];
+            echo $message;
+        }
     }
 
     function Simulateorder(): void
-    {  
+    {
         $amount = "1000";
         $orderid = "785428564443638994";
         //$orderid = "1499725e-db64-4ab5-b91b-e33cd62410e4";
         $trxToken = "8jUAvVzp3IjR3ZCsJ2bpSrJomMF72O5sUFk3ODU0Mjg1NjQ0NDM2Mzg5OTQ=";
         $appId = BasSDK::GetAppId();
-      
-        $response = BasSDK::SimulateMobilePaymentAsync( $orderid, $appId, trxToken:$trxToken, amount: $amount );
-       // $status =   $response->status;
+
+        $response = BasSDK::SimulateMobilePaymentAsync($orderid, $appId, trxToken: $trxToken, amount: $amount);
+        // $status =   $response->status;
         //print_r($response);
-        echo($response);
+        echo ($response);
     }
 
     function orderV2()
@@ -160,27 +160,26 @@ function init (){
         print_r($order);
         echo "</pre>";
         //echo $order;
-       // $trxToken = $order['body']['trxToken'];
+        // $trxToken = $order['body']['trxToken'];
         //$orderid = $order['body']['order']['orderId'];
         //echo "trxToken" . $trxToken;
     }
-   
 
-   
- 
 
-        function CheckStatusV2()
-        {
-            $orderid = "785428564443638994";
-            $appId = BasSDK::GetAppId();
-            $amount = rand(100, 10000);
 
-           $order_status = BasSDK::CheckStatus($orderid);
-           echo "<pre>";  // Optional: this adds better formatting for arrays in HTML
-         // echo $order_status["body"]["trxStatus"];
-           print_r($order_status);
+
+
+    function CheckStatusV2()
+    {
+        $orderid = "785428564443638994";
+        $appId = BasSDK::GetAppId();
+        $amount = rand(100, 10000);
+
+        $order_status = BasSDK::CheckStatus($orderid);
+        echo "<pre>";  // Optional: this adds better formatting for arrays in HTML
+        // echo $order_status["body"]["trxStatus"];
+        print_r($order_status);
         echo "</pre>";
-      
     }
 
     function CheckStatus()
@@ -206,10 +205,10 @@ function init (){
         //echo $order;
         $trxToken = $order['body']['trxToken'];
         $orderid = $order['body']['order']['orderId'];
-        echo "trxToken: ".$trxToken,nl2br("\n");
-        echo "orderid: ".$orderid.nl2br("\n");
+        echo "trxToken: " . $trxToken, nl2br("\n");
+        echo "orderid: " . $orderid . nl2br("\n");
         echo "<div id=orderid>";
-       // echo htmlspecialchars($orderid); // put as the div content
+        // echo htmlspecialchars($orderid); // put as the div content
         echo "</div>";
         echo "<div id=trxToken>";
         echo htmlspecialchars($trxToken); // put as the div content
@@ -223,7 +222,7 @@ function init (){
 
         echo '<script>getPayment();</script>';
     }
-    
+
 
     ?>
 
