@@ -27,8 +27,11 @@ function init($env)
         );
     }
 
+
     echo 'Intialized environment : ' . BasSDK::GetEnvironmentValue();
+    return '<script src="bassdk.js" type="text/javascript"></script>';
 }
+
 init(ENVIRONMENT::STAGING);
 ?>
 <!DOCTYPE html>
