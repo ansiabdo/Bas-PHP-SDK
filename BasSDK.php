@@ -31,9 +31,9 @@ class BasSDK
         return null;
     }
 
-   
 
-        static public function getToken($code)
+
+    static public function getToken($code)
     {
         $header = array('Content-Type: application/x-www-form-urlencoded');
         $data = array();
@@ -64,10 +64,9 @@ class BasSDK
 
     static public function Init($orderId, $amount, $callBackUrl, $customerInfoId, $orderDetails)
     {
-        $header = array('Accept: text/plain', 'Content-Type: application/json');
+        $reqBody = '{"head":{"signature":"sigg","requestTimeStamp":"timess"},"body":bodyy}';
         //  $config=include('config.php');
-        $requestTimestamp = '1678695536';
-
+        $requestTimestamp =  (string)  time();
 
         $bodyy['requestTimestamp'] = $requestTimestamp;
         $bodyy['appId'] = self::GetAppId();
@@ -81,24 +80,23 @@ class BasSDK
         $bodyy['orderDetails'] = $orderDetails;
 
         $bodyyStr = json_encode($bodyy);
-        
+
         $basChecksum = BasChecksum::generateSignature($bodyyStr, self::GetMKey());
 
-        $head["signature"] = $basChecksum;
-        $head["requestTimestamp"] = $requestTimestamp;
 
-
-        $req["head"] = $head;
-        $req["body"] = $bodyy;
+        /* prepare JSON string for request */
+        $reqBody = str_replace('bodyy', $bodyyStr, $reqBody);
+        $reqBody = str_replace('sigg', $basChecksum, $reqBody);
+        $reqBody = str_replace('timess', $requestTimestamp, $reqBody);
         $paymentUrl = self::GetInitiatePaymentUrl();
-        $resp = self::httpPost($paymentUrl, json_encode($req), $header);
-         //return $resp;
-        if(self::isSandboxEnvironment()){
+        $resp = self::httpPost($paymentUrl, $reqBody, self::$ContentTypeJson);
+        //return $resp;
+        if (self::isSandboxEnvironment()) {
             return  json_decode($resp, true);
         }
         //Add Signature
-        $isVerify = BasChecksum::verifySignature($bodyyStr, self::GetMKey(),checksum: $basChecksum );
-        if(!$isVerify){
+        $isVerify = BasChecksum::verifySignature($bodyyStr, self::GetMKey(), checksum: $basChecksum);
+        if (!$isVerify) {
             throw new InvalidArgumentException("BASSDK.verifySignature Invalid_response_signature");
         }
 
@@ -129,14 +127,13 @@ class BasSDK
         $paymentStatusUrl = self::GetPaymentStatusUrl();
         $resp = self::httpPost(url: $paymentStatusUrl, data: $data, header: $header);
 
-       return  json_decode($resp, true);
-       // return $resp;
+        return  json_decode($resp, true);
+        // return $resp;
     }
 
 
     static function httpPost($url, $data, $header)
     {
-
 
         $curl = curl_init($url);
         curl_setopt($curl, CURLOPT_POST, true);
@@ -165,7 +162,6 @@ class BasSDK
     }
     static function httpGet($url, $data, $header)
     {
-
         //if($url)
         $curl = curl_init($url);
 
@@ -182,9 +178,6 @@ class BasSDK
 
         $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
-
-
-
         if ($httpCode != 200) {
             $msg = "Return httpCode is {$httpCode} \n"
                 . curl_error($curl) . "URL: " . $url;
@@ -198,25 +191,25 @@ class BasSDK
             return $response;
         }
     }
-   
-    
-/**
+
+
+    /**
      * Implement changes based on updates to Bas Sdk in C#
      *
      *
      */
 
-     public static function Initialize(ENVIRONMENT $environment, string $clientId, string $clientSecret, string $appId,string $openId, string $mKey): void
-     {        
-        ConfigProperties::SetEnvironment(environment:$environment);
-        self::SetClientId(clientId: $clientId); 
-        self::SetClientSecret(clientSecret: $clientSecret); 
-        self::SetAppId($appId); 
+    public static function Initialize(ENVIRONMENT $environment, string $clientId, string $clientSecret, string $appId, string $openId, string $mKey): void
+    {
+        ConfigProperties::SetEnvironment(environment: $environment);
+        self::SetClientId(clientId: $clientId);
+        self::SetClientSecret(clientSecret: $clientSecret);
+        self::SetAppId($appId);
         self::SetOpenId($openId);
-        self::SetMKey(mKey: $mKey); 
-     }
+        self::SetMKey(mKey: $mKey);
+    }
 
-         /**
+    /**
      * Get UserInfo V2 
      *
      * @param  string  $code
@@ -228,12 +221,12 @@ class BasSDK
         $header = array('Content-Type: application/x-www-form-urlencoded');
         $data = array();
         $data['client_secret'] = self::GetClientSecret();
-         $data['client_id'] = self::GetClientId();
+        $data['client_id'] = self::GetClientId();
 
         $data['code'] = $code;
         $data['redirect_uri'] = self::GetAuthRedirectUrl();
         $body = http_build_query($data);
-      
+
         if (!is_null($code)) {
             $response =    self::httpPost(self::GetuserInfoV2Url(), $body, $header);
             return json_decode($response, true);
@@ -241,30 +234,31 @@ class BasSDK
         return null;
     }
 
-     /**
-         * 
-         * Get full baseUrl of API
-         */
+    /**
+     * 
+     * Get full baseUrl of API
+     */
 
-     static function GetFullBaseUrlBasedOnEnvironment($relativePath): string {
+    static function GetFullBaseUrlBasedOnEnvironment($relativePath): string
+    {
         $baseUrl = "";
         //echo "Current env: ". ConfigProperties::$environment->value;
         switch (ConfigProperties::$environment) {
             case ENVIRONMENT::STAGING:
-                $baseUrl = ConfigProperties::$baseUrlStaging.$relativePath;
+                $baseUrl = ConfigProperties::$baseUrlStaging . $relativePath;
                 return $baseUrl;
             case ENVIRONMENT::PRODUCTION:
-                $baseUrl = ConfigProperties::$baseUrlProduction.$relativePath;
+                $baseUrl = ConfigProperties::$baseUrlProduction . $relativePath;
                 return $baseUrl;
             case ENVIRONMENT::SANDBOX:
-                $baseUrl = ConfigProperties::$BaseUrlSandbox.$relativePath;
+                $baseUrl = ConfigProperties::$BaseUrlSandbox . $relativePath;
                 return $baseUrl;
             default:
-               throw new InvalidArgumentException("BASSDK.UnKnown Environment" . ConfigProperties::$environment->value);
-         }
+                throw new InvalidArgumentException("BASSDK.UnKnown Environment" . ConfigProperties::$environment->value);
+        }
     }
 
- /**
+    /**
      * Set the openId during initialization.
      *
      * @param  int  $openId
@@ -278,7 +272,7 @@ class BasSDK
         ConfigProperties::$openId = $openId;
     }
 
-      /**
+    /**
      * Set the appId during initialization.
      *
      * @param  int  $appId
@@ -292,7 +286,7 @@ class BasSDK
         ConfigProperties::$appId = $appId;
     }
 
-      /**
+    /**
      * Set the mKey during initialization.
      *
      * @param  int  $mKey
@@ -306,7 +300,7 @@ class BasSDK
         ConfigProperties::$mKey = $mKey;
     }
 
-      /**
+    /**
      * Set the clientId during initialization.
      *
      * @param  int  $clientId
@@ -341,7 +335,7 @@ class BasSDK
         ConfigProperties::$environment = $environment;
     }
 
-      /**
+    /**
      * Get the appId .
      *
      * @return  string  $appId
@@ -349,14 +343,14 @@ class BasSDK
      */
     public static function GetOpenId(): string
     {
-        if (empty( ConfigProperties::$openId)) {
+        if (empty(ConfigProperties::$openId)) {
             throw new InvalidArgumentException("BASSDK.GetOpenId openId is null");
         }
         return ConfigProperties::$openId;
     }
 
 
-      /**
+    /**
      * Get the appId .
      *
      * @return  string  $appId
@@ -364,13 +358,13 @@ class BasSDK
      */
     public static function GetAppId(): string
     {
-        if (empty( ConfigProperties::$appId)) {
+        if (empty(ConfigProperties::$appId)) {
             throw new InvalidArgumentException("BASSDK.SetAppId appId is null");
         }
         return ConfigProperties::$appId;
     }
 
-     /**
+    /**
      * Get the appId .
      *
      * @return  string  $appId
@@ -378,14 +372,14 @@ class BasSDK
      */
     public static function GetMKey(): string
     {
-        if (empty( ConfigProperties::$mKey)) {
+        if (empty(ConfigProperties::$mKey)) {
             throw new InvalidArgumentException("BASSDK.GetMKey mKey is null");
         }
         return ConfigProperties::$mKey;
     }
 
 
-        /**
+    /**
      * Get the ClientId .
      *
      * @return  string  $clientId
@@ -398,7 +392,7 @@ class BasSDK
         }
         return ConfigProperties::$clientId;
     }
-        /**
+    /**
      * Get the ClientSecret .
      *
      * @return  string  $clientSecret
@@ -406,7 +400,7 @@ class BasSDK
      */
     private static function GetClientSecret(): string
     {
-        if (empty( ConfigProperties::$clientSecret)) {
+        if (empty(ConfigProperties::$clientSecret)) {
             throw new InvalidArgumentException("BASSDK.SetClientsecret clientsecret is null");
         }
         return ConfigProperties::$clientSecret;
@@ -423,7 +417,7 @@ class BasSDK
 
     private static function GetAuthRedirectUrl(): string
     {
-        if (empty( ConfigProperties::$redirectUrl)) {
+        if (empty(ConfigProperties::$redirectUrl)) {
             throw new InvalidArgumentException("BASSDK.GetAuthRedirectUrl RedirectUrl is null");
         }
         return self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::$redirectUrl);
@@ -431,18 +425,18 @@ class BasSDK
 
     private static function GetuserInfoV2Url(): string
     {
-        if (empty( ConfigProperties::$userInfoV2Url)) {
+        if (empty(ConfigProperties::$userInfoV2Url)) {
             throw new InvalidArgumentException("BASSDK.GetuserInfoV2Url userInfoV2Url is null");
         }
-       return self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::$userInfoV2Url);
+        return self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::$userInfoV2Url);
     }
 
     private static function GetInitiatePaymentUrl(): string
     {
-        if (empty( ConfigProperties::$initiatePaymentUrl)) {
+        if (empty(ConfigProperties::$initiatePaymentUrl)) {
             throw new InvalidArgumentException("BASSDK.GetInitiatePaymentUrl initiatePaymentUrl is null");
         }
-       return self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::$initiatePaymentUrl);
+        return self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::$initiatePaymentUrl);
     }
 
     private static function GetPaymentStatusUrl(): string
@@ -450,29 +444,29 @@ class BasSDK
         if (empty(ConfigProperties::$paymentStatusUrl)) {
             throw new InvalidArgumentException("BASSDK.GetPaymentStatusUrl paymentStatusUrl is null");
         }
-       return self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::$paymentStatusUrl);
+        return self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::$paymentStatusUrl);
     }
     private static function GetTokenUrl(): string
     {
         if (empty(ConfigProperties::$tokenUrl)) {
             throw new InvalidArgumentException("BASSDK.GetTokenUrl tokenUrl is null");
         }
-       return self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::$tokenUrl);
+        return self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::$tokenUrl);
     }
     private static function GetMobileFetchAuthUrl(): string
     {
         if (empty(ConfigProperties::$mobileFetchAuthUrl)) {
             throw new InvalidArgumentException("BASSDK.GetMobileFetchAuthUrl mobileFetchAuthUrl is null");
         }
-       return self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::$mobileFetchAuthUrl);
+        return self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::$mobileFetchAuthUrl);
     }
-    
+
     private static function GetMobilePaymentUrl(): string
     {
         if (empty(ConfigProperties::$mobilePaymentUrl)) {
             throw new InvalidArgumentException("BASSDK.GetMobilePaymentUrl mobilePaymentUrl is null");
         }
-       return self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::$mobilePaymentUrl);
+        return self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::$mobilePaymentUrl);
     }
 
 
@@ -503,11 +497,12 @@ class BasSDK
         return $response;
     }
     //TODO
-    private static function isSandboxEnvironment() {
+    private static function isSandboxEnvironment()
+    {
         if (ConfigProperties::$environment == ENVIRONMENT::SANDBOX) {
-          return true;
+            return true;
         }
-          return false;   
+        return false;
     }
 
     public static function SendNotificationToCustomer($templateName, $orderId, $orderParams, $firebasePayload, $extraPayload): mixed
@@ -520,7 +515,7 @@ class BasSDK
         $header['Authorization'] = $accessToken;
         $header['scheme'] = 'Bearer';
         $header['AppId'] = self::GetAppId();
-        
+
         $data = array();
         $data['orderId'] = $orderId;
         $data['extraPayload'] = $extraPayload;
@@ -530,27 +525,29 @@ class BasSDK
 
         $body = http_build_query($data);
         $url = self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::$notificationUrl);
-        $response = self::httpPost( $url, $body, header: $header);
+        $response = self::httpPost($url, $body, header: $header);
         return json_decode($response, true);
     }
-    
-    public static function SimulateMobileFetchAuthAsync($clientId): mixed {
-        if(!self::isSandboxEnvironment()){
+
+    public static function SimulateMobileFetchAuthAsync($clientId): mixed
+    {
+        if (!self::isSandboxEnvironment()) {
             throw new InvalidArgumentException('This method is only allowed on Sandbox environment');
-        }     
+        }
         $header = array('Content-Type: application/json');
         $url = self::GetMobileFetchAuthUrl();
         $fulUrl = $url . "?clientId=" . urlencode($clientId);
         //echo "Full auth Url is: ". $fulUrl .nl2br("\n");
-        $jsonResponse = self::httpPost( $fulUrl, data: null, header: $header);  
+        $jsonResponse = self::httpPost($fulUrl, data: null, header: $header);
         $response = json_decode($jsonResponse);
-       // echo "Fatch Auth Response is : ". $response .nl2br("\n");
-        return $response;      
+        // echo "Fatch Auth Response is : ". $response .nl2br("\n");
+        return $response;
     }
 
 
-    public static function SimulateMobilePaymentAsync($orderId, $appId, $trxToken, $amount): mixed {
-        if(!self::isSandboxEnvironment()){
+    public static function SimulateMobilePaymentAsync($orderId, $appId, $trxToken, $amount): mixed
+    {
+        if (!self::isSandboxEnvironment()) {
             throw new InvalidArgumentException('This method is only available on Sandbox environment');
         }
         $header = array('Content-Type: application/json');
@@ -560,20 +557,20 @@ class BasSDK
         $data['appId'] = $appId;
         $data['orderId'] = $orderId;
         $data['trxToken'] = $trxToken;
-       // $merchantId = "ac90ddd1-6627-4ae9-b268-98c17bd8ee6c";
-       // $data['merchantId'] = $merchantId;
-        
+        // $merchantId = "ac90ddd1-6627-4ae9-b268-98c17bd8ee6c";
+        // $data['merchantId'] = $merchantId;
+
         // Convert the data array to a JSON string
         $body = json_encode($data);
         //$body = http_build_query($data);
         $url = self::GetMobilePaymentUrl();
-        $response = self::httpPost( $url, $body, header: $header);  
-        return $response;  
+        $response = self::httpPost($url, $body, header: $header);
+        return $response;
     }
-
 }
 // #region Config 
-  class  ConfigProperties {
+class  ConfigProperties
+{
 
     public static $openId;
     public static $mKey;
@@ -581,7 +578,7 @@ class BasSDK
     public static $clientId;
     public static $clientSecret;
     public static ENVIRONMENT $environment;
-      //public static ?ENVIRONMENT $environment = null; 
+    //public static ?ENVIRONMENT $environment = null; 
     public static  $BaseUrlSandbox = "https://basgate-sandbox.com";
     public static  $baseUrlStaging = "https://api-tst.basgate.com:4951";
     public static  $baseUrlProduction = "https://api.basgate.com:4950";
@@ -603,24 +600,22 @@ class BasSDK
         self::$environment = $environment;
     }
 
-     // Example method that uses the environment
-     public static function GetEnvironmentValue(): mixed
-     {
+    // Example method that uses the environment
+    public static function GetEnvironmentValue(): mixed
+    {
         return self::$environment->value;
-         // Check if the environment is initialized before accessing
-         if (self::$environment !== null) {
-             //return "Environment is: " . self::$environment->value;
-             self::$environment->value;
-         } else {
-             throw new Exception("Environment is not initialized.");
-         }
-     }
-
-
-    
+        // Check if the environment is initialized before accessing
+        if (self::$environment !== null) {
+            //return "Environment is: " . self::$environment->value;
+            self::$environment->value;
+        } else {
+            throw new Exception("Environment is not initialized.");
+        }
+    }
 }
 
-enum ENVIRONMENT: string {
+enum ENVIRONMENT: string
+{
     case STAGING = 'staging';
     case PRODUCTION = 'production';
     case SANDBOX = 'sandbox';

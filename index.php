@@ -106,7 +106,7 @@ function init (){
     {
        
            // $authid = "B0CAE2FC89B9E5C6D9D8B5DF2AE5DAF94D13491E9376E11469119DD1A2FB3375";
-            $clientId = bassdk::GetClientId();
+            $clientId = BasSDK::GetClientId();
             $user_response = BasSDK::getUserInfoV2($clientId);
             if (is_null($user_response)) {
                 echo nl2br("\n"), "GetUserInfo: Status= 0", nl2br("\n"), nl2br("\n");
