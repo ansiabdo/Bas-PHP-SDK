@@ -5,14 +5,13 @@
  * application and Bas over network have not been tampered with. We use SHA256 hashing and 
  * AES128 encryption algorithm to ensure the safety of transaction data.
  *
- * @author     Kamal Hassan, Abdullah Al-Ansi
- * @version    0.0.2
+ * @author     Kamal Hassan
+ * @version    0.0.1
  * @link       https://.basgate.com/docs/
  */
 
 
-
-class BasChecksum
+class BasChecksumCopy
 {
 	private static $iv = "@@@@&&&&####$$$$";
 

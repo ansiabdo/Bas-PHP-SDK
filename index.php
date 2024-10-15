@@ -3,6 +3,7 @@
 use PSpell\Config;
 
 include('BasSDK.php');
+include('BasSDKHelper.php');
 
 function init($env)
 {
@@ -125,11 +126,12 @@ init(ENVIRONMENT::STAGING);
     ?>
             <script>
                 var x = await oauthToken(' . BasSDK::GetClientId() . ');
-            </script>';
+            </script>
     <?php
         }
 
         echo "This is Button1 that is selected";
+
     }
 
     function SimulateUserInfo(): void
@@ -150,7 +152,7 @@ init(ENVIRONMENT::STAGING);
     function UserinfoV2()
     {
 
-        // $authid = "B0CAE2FC89B9E5C6D9D8B5DF2AE5DAF94D13491E9376E11469119DD1A2FB3375";
+        // $authCode = "B0CAE2FC89B9E5C6D9D8B5DF2AE5DAF94D13491E9376E11469119DD1A2FB3375";
         $authCode = isset($_COOKIE['AuthCode']) ? $_COOKIE['AuthCode'] : null;
         if (!is_null($authCode)) {
             echo "AuthCode: " . htmlspecialchars($authCode) . nl2br("\n");
@@ -193,25 +195,26 @@ init(ENVIRONMENT::STAGING);
         $response = BasSDK::SimulateMobilePaymentAsync($orderid, $appId, trxToken: $trxToken, amount: $amount);
         // $status =   $response->status;
         //print_r($response);
-        echo ($response);
+        echo $response;
     }
 
     function orderV2()
     {
 
         $callBackUrl = "";
-        $orderid = "7854285644436389944";
-        $openId = BasSDK::GetOpenId();
-        $appId = BasSDK::GetAppId();
+        $orderid = (string) time();    
         $amount = rand(100, 10000);
-        $order = BasSDK::Init($orderid, $amount, $callBackUrl, customerInfoId: $openId, orderDetails: ["id" => 100]);
-        echo "<pre>";
+        $name = "Test";
+        //$order = BasSDK::Init($orderid, $amount, $callBackUrl, customerInfoId: $openId, orderDetails: ["id" => 100]);
+        $order = BasSDKHelper::init_payment($orderid, $amount, $callBackUrl, customerInfoName: $name);
+        //echo "<pre>";
         print_r($order);
-        echo "</pre>";
         //echo $order;
-        // $trxToken = $order['body']['trxToken'];
+        //echo "</pre>";
+        //echo $order;
+       // $trxToken = $order['body']['trxToken'];
         //$orderid = $order['body']['order']['orderId'];
-        //echo "trxToken" . $trxToken;
+       // echo "trxToken" . $trxToken;
     }
 
 
@@ -220,7 +223,8 @@ init(ENVIRONMENT::STAGING);
 
     function CheckStatusV2()
     {
-        $orderid = "785428564443638994";
+       // $orderid = "785428564443638994";
+        $orderid = "1499725e-db64-4ab5-b91b-e33cd62410e4";
         $appId = BasSDK::GetAppId();
         $amount = rand(100, 10000);
 

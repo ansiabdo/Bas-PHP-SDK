@@ -1,75 +1,81 @@
 <?php
 
-
-namespace BasSDK;
+//include('BasChecksum.php');
+// namespace BasSDK;
+// use BasChecksum;
+// use BasSDK;
 
 class BasSDKHelper
 {
-
-    function init_payment()
+    static function init_payment($orderId, $amount, $callBackUrl, $customerInfoName): mixed
     {
-
         $reqBody = '{"head":{"signature":"sigg","requestTimeStamp":"timess"},"body":bodyy}';
         // $requestTimestamp = gmdate("Y-m-d\TH:i:s\Z");
         $requestTimestamp = (string)  time();
         /* body parameters */
         $basgateParams["body"] = array(
-            "appId" => $this->getSetting('bas_application_id'),
+            "appId" => BasSDK::GetAppId(),
             "requestTimestamp" => $requestTimestamp,
             "orderType" => "PayBill",
-            "callBackUrl" => $callBackURL,
+            "callBackUrl" => $callBackUrl,
             "customerInfo" => array(
-                "id" => $paramData['open_id'],
-                "name" => $paramData['cust_name'],
+                "id" => "75b32f99-5fe6-496f-8849-a5dedeb0a65f",
+                "name" => "Abdullah AlAnsi"
             ),
             "amount" => array(
-                "value" => (float)$paramData['amount'],
-                "currency" => $paramData['currency'],
+                "value" => (float) $amount,
+                "currency" => 'YER',
             ),
-            "orderId" => $paramData['order_id'],
+
+            "orderId" => $orderId,
             "orderDetails" => array(
-                "Id" => $paramData['order_id'],
-                "Currency" => $paramData['currency'],
-                "TotalPrice" => (float) $paramData['amount'],
+                "Id" => $orderId,
+                "Currency" => 'YER',
+                "TotalPrice" => (float) $amount,
             )
         );
         $bodystr = json_encode($basgateParams["body"]);
-        $checksum = BasgateChecksum::generateSignature($bodystr, $this->getSetting('bas_merchant_key'));
+
+        $checksum = BasChecksum::generateSignature($bodystr, BasSDK::GetMKey());
 
         if ($checksum === false) {
             error_log(
                 sprintf(
                     /* translators: 1: Event data. */
-                    __('Could not retrieve signature, please try again Data: %1$s.'),
+                    'Could not retrieve signature, please try again Data: %1$s.',
                     $bodystr
                 )
             );
-            throw new Exception(__('Could not retrieve signature, please try again.', BasgateConstants::ID));
+            throw new Exception('Could not retrieve signature, please try again.', BasSDK::GetMKey());
         }
 
         /* prepare JSON string for request */
         $reqBody = str_replace('bodyy', $bodystr, $reqBody);
         $reqBody = str_replace('sigg', $checksum, $reqBody);
-        $reqBody = str_replace('timess', $requestTimestamp, $reqBody);
-
-        $url = BasgateHelper::getBasgateURL(BasgateConstants::INITIATE_TRANSACTION_URL, $this->getSetting('bas_environment'));
+        $reqBody = str_replace('timess', '1729020006', $reqBody);
+        print_r($reqBody);
+        echo nl2br("\n") ."";
+        $url = BasSDK::GetInitiatePaymentUrl();
         $header = array('Accept: text/plain', 'Content-Type: application/json');
-        $res = BasgateHelper::httpPost($url, $reqBody, $header);
-
+        $res = BasSDK::httpPost($url, $reqBody, $header);
+        // return $res;
         if (!empty($res['body']['trxToken'])) {
             $data['trxToken'] = $res['body']['trxToken'];
             $data['trxId'] = $res['body']['trxId'];
-            $data['callBackUrl'] = $callBackURL;
+            $data['callBackUrl'] = $callBackUrl;
         } else {
             error_log(
                 sprintf(
                     /* translators: 1: bodystr, 2:. */
-                    __('trxToken empty \n bodystr: %1$s , \n $checksum: %2$s.'),
+                    'trxToken empty \n bodystr: %1$s , \n $checksum: %2$s.',
                     $bodystr,
                     $checksum
                 )
             );
             $data['trxToken'] = "";
         }
+        return $res;
+        //return  json_decode($res, true);
+        //return $data;
     }
 }

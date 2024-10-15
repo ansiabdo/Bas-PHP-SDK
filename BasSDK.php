@@ -130,7 +130,49 @@ class BasSDK
         // return $resp;
     }
 
+    static function httpPost2($url, $data, $header)
+    {
+        try {
+            $curl = curl_init($url);
+            curl_setopt($curl, CURLOPT_POST, true);
+            curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
+            curl_setopt($curl, CURLOPT_HTTPHEADER, $header);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
 
+            $response = curl_exec($curl);
+            $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
+            if ($httpCode != 200) {
+                $msg = "Return httpCode is {$httpCode} \n"
+                    . curl_error($curl) . "URL: " . $url;
+                $error = curl_error($curl);
+                if ($error) {
+                   // wc_add_notice("Error: " . $error, 'error');
+                }
+                error_log(
+                    sprintf(
+                        /* translators: 1: Url, 2: Response code, 3: Event data, 4: ErrorMsg. */
+                        'executecUrl error status!=200 for url: %1$s, Response code: %2$s,Data: %3$s , ErrorMsg: %4$s',
+                        $url,
+                        $httpCode,
+                        $data,
+                        $error
+                    )
+                );
+                curl_close($curl);
+                return new Exception('Could not retrieve the access token, please try again.');
+                // return $msg;
+                //return $response;
+            } else {
+                curl_close($curl);
+                return json_decode($response, true);
+            }
+        } catch (\Throwable $th) {
+            return new Exception("ERROR On httpPost :" . $th->getMessage());
+        }
+    }
     static function httpPost($url, $data, $header)
     {
 
@@ -414,7 +456,7 @@ class BasSDK
         }
     }
 
-    private static function GetAuthRedirectUrl(): string
+    public static function GetAuthRedirectUrl(): string
     {
         if (empty(ConfigProperties::$redirectUrl)) {
             throw new InvalidArgumentException("BASSDK.GetAuthRedirectUrl RedirectUrl is null");
@@ -430,7 +472,7 @@ class BasSDK
         return self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::$userInfoV2Url);
     }
 
-    private static function GetInitiatePaymentUrl(): string
+    public static function GetInitiatePaymentUrl(): string
     {
         if (empty(ConfigProperties::$initiatePaymentUrl)) {
             throw new InvalidArgumentException("BASSDK.GetInitiatePaymentUrl initiatePaymentUrl is null");
