@@ -5,35 +5,10 @@ use PSpell\Config;
 include('BasSDK.php');
 include('BasSDKHelper.php');
 
-function init($env)
-{
+include('Initialization.php');
 
-    if ($env === "sandbox") {
-        $initil = BasSDK::Initialize(
-            $env,
-            clientId: '453a95c0-1efa-4c9c-8341-392eb44d34f2',
-            clientSecret: '453a95c0-1efa--83ac-146eb2654d16',
-            appId: 'ac90ddd1-6627-4ae9-b268-98c17bd8ee6c',
-            openId: '848a8f7d-3058-ab15-a90b-132816bef156',
-            mKey: '',
-        );
-    } else {
-        $initil = BasSDK::Initialize(
-            $env,
-            clientId: '653ed1ff-59cb-41aa-8e7f-0dc5b885a024',
-            clientSecret: 'd93fbc8c-877b-4b8d-b822-e6dcdaf4b429',
-            appId: '8f4871cb-b5ed-487e-baae-b6301f29db08',
-            openId: '848a8f7d-3058-ab15-83ac-146eb2654d16',
-            mKey: 'cmJsckQ1Nlh1S0FZVjJqQg==',
-        );
-    }
-
-
-    echo 'Intialized environment : ' . BasSDK::GetEnvironmentValue();
-    return '<script src="bassdk.js" type="text/javascript"></script>';
-}
-
-init(ENVIRONMENT::STAGING);
+$initial = Initialization::getInstance();
+$initial->Initialize(ENVIRONMENT::SANDBOX);
 ?>
 <!DOCTYPE html>
 <html>
@@ -52,19 +27,19 @@ init(ENVIRONMENT::STAGING);
         Bas SDK
     </h1>
 
-    <h4>
+    <!-- <h4>
         LOGIN
-    </h4>
+    </h4> -->
     <form method="post">
         <?php
         if (BasSDK::GetEnvironmentValue() !== "sandbox"):
         ?>
             <div style="text-align: center;">
                 <!-- <input type="submit" name="initialize" class="button" value="initialize" /> -->
-                <input type="submit" name="login" class="button" value="login" />
-                <input type="submit" name="userinfo" class="button" value="userinfo" />
-                <input type="submit" name="order" class="button" value="New order" />
-                <input type="submit" name="status" class="button" value="Order status" />
+                <input type="submit" name="login" class="button" value="Login" />
+                <input type="submit" name="user_info" class="button" value="User Info" />
+                <input type="submit" name="initiate_payment" class="button" value="Initiate Payment" />
+                <input type="submit" name="check_payment_status" class="button" value="Check Payment Status" />
             </div>
         <?php
         endif;
@@ -79,8 +54,8 @@ init(ENVIRONMENT::STAGING);
             </div>
             <br>
             <div style="text-align: center;">
-                <input type="submit" name="simulate_userinfo" class="button" value="Simulate Userinfo" />
-                <input type="submit" name="simulateOrder" class="button" value="Simulate order" />
+                <input type="submit" name="simulate_userinfo" class="button" value="Simulate UserInfo" />
+                <input type="submit" name="simulate_payment" class="button" value="Simulate Payment" />
             </div>
         <?php
         endif;
@@ -92,18 +67,18 @@ init(ENVIRONMENT::STAGING);
 
     if (array_key_exists('login', $_POST)) {
         login();
-    } else if (array_key_exists('userinfo', $_POST)) {
-        UserinfoV2();
+    } else if (array_key_exists('user_info', $_POST)) {
+        UserInfoV2();
     } else if (array_key_exists('simulate_userinfo', $_POST)) {
         SimulateUserInfo();
-    } else if (array_key_exists('order', $_POST)) {
-        orderV2();
-    } else if (array_key_exists('status', $_POST)) {
-        CheckStatusV2();
+    } else if (array_key_exists('initiate_payment', $_POST)) {
+        InitiatePayment();
+    } else if (array_key_exists('check_payment_status', $_POST)) {
+        CheckPaymentStatus();
     } else if (array_key_exists('initialize', $_POST)) {
         initialize();
-    } else if (array_key_exists('simulateOrder', $_POST)) {
-        Simulateorder();
+    } else if (array_key_exists('simulate_payment', $_POST)) {
+        SimulatePayment();
     }
 
     function initialize()
@@ -137,19 +112,21 @@ init(ENVIRONMENT::STAGING);
     function SimulateUserInfo(): void
     {
         $clientId = BasSDK::GetClientId();
-        $response = BasSDK::SimulateMobileFetchAuthAsync(clientId: $clientId);
-        $status    = $response->status;
-        $code      = $response->code;
+        $response = BasSDKHelper::SimulateMobileFetchAuth(clientId: $clientId);
+        print_r ($response);
+       // $status    = $response->status;
+        //$code      = $response->code;
+
 
         //$authid =   $response->data->authId;
-        echo "Status: " . $status, nl2br("\n");
+        //echo "Status: " . $status, nl2br("\n");
 
-        echo "Code: " . $code, nl2br("\n");
+       // echo "Code: " . $code, nl2br("\n");
         //echo "AuthId: " . $authid, nl2br("\n");
 
     }
 
-    function UserinfoV2()
+    function UserInfoV2()
     {
 
         // $authCode = "B0CAE2FC89B9E5C6D9D8B5DF2AE5DAF94D13491E9376E11469119DD1A2FB3375";
@@ -157,7 +134,7 @@ init(ENVIRONMENT::STAGING);
         if (!is_null($authCode)) {
             echo "AuthCode: " . htmlspecialchars($authCode) . nl2br("\n");
 
-            $user_response = BasSDK::getUserInfoV2($authCode);
+            $user_response = BasSDKHelper::GetUserInfo($authCode);
             if (is_null($user_response)) {
                 echo nl2br("\n"), "GetUserInfo: Status= 0", nl2br("\n"), nl2br("\n");
                 echo "Error Can't get Token";
@@ -184,7 +161,7 @@ init(ENVIRONMENT::STAGING);
         }
     }
 
-    function Simulateorder(): void
+    function SimulatePayment(): void
     {
         $amount = "1000";
         $orderid = "785428564443638994";
@@ -192,29 +169,27 @@ init(ENVIRONMENT::STAGING);
         $trxToken = "8jUAvVzp3IjR3ZCsJ2bpSrJomMF72O5sUFk3ODU0Mjg1NjQ0NDM2Mzg5OTQ=";
         $appId = BasSDK::GetAppId();
 
-        $response = BasSDK::SimulateMobilePaymentAsync($orderid, $appId, trxToken: $trxToken, amount: $amount);
+        $response = BasSDKHelper::SimulateMobilePayment($orderid, trxToken: $trxToken, amount: $amount);
         // $status =   $response->status;
         //print_r($response);
         echo $response;
     }
 
-    function orderV2()
+    function InitiatePayment()
     {
 
         $callBackUrl = "";
         $orderid = (string) time();    
         $amount = rand(100, 10000);
-        $name = "Test";
-        $name = "75b32f99-5fe6-496f-8849-a5dedeb0a65f";
+        $customerInfoId = "75b32f99-5fe6-496f-8849-a5dedeb0a65f";
        // $order = BasSDK::Init($orderid, $amount, $callBackUrl, customerInfoId: $name, orderDetails: ["id" => 100]);
-        $order = BasSDKHelper::init_payment($orderid, $amount, $callBackUrl, customerInfoName: $name);
+        $order = BasSDKHelper::InitPayment($orderid, $amount, $callBackUrl, customerInfoId: $customerInfoId);
         //echo "<pre>";
         print_r($order);
         //echo $order;
         //echo "</pre>";
         //echo $order;
        // $trxToken = $order['body']['trxToken'];
-        //$orderid = $order['body']['order']['orderId'];
        // echo "trxToken" . $trxToken;
     }
 
@@ -222,60 +197,58 @@ init(ENVIRONMENT::STAGING);
 
 
 
-    function CheckStatusV2()
+    function CheckPaymentStatus()
     {
-       // $orderid = "785428564443638994";
         $orderid = "1499725e-db64-4ab5-b91b-e33cd62410e4";
-        $appId = BasSDK::GetAppId();
         $amount = rand(100, 10000);
 
-        $order_status = BasSDK::CheckStatus($orderid);
+        $order_status = BasSDKHelper::CheckPaymentStatus($orderid);
         echo "<pre>";  // Optional: this adds better formatting for arrays in HTML
         // echo $order_status["body"]["trxStatus"];
         print_r($order_status);
         echo "</pre>";
     }
 
-    function CheckStatus()
-    {
-        if (isset($_COOKIE["PaymentResult"])) {
-            // Decode the cookie if it exists
-            $invoice = json_decode($_COOKIE["PaymentResult"], true); // `true` to convert it to an associative array
-            // You can now safely access $invoice
-            print_r($invoice);
-        } else {
-            // Handle the case where the cookie is not set
-            echo "PaymentResult cookie not found.";
-        }
-    }
-    function order()
-    {
+    // function CheckStatus()
+    // {
+    //     if (isset($_COOKIE["PaymentResult"])) {
+    //         // Decode the cookie if it exists
+    //         $invoice = json_decode($_COOKIE["PaymentResult"], true); // `true` to convert it to an associative array
+    //         // You can now safely access $invoice
+    //         print_r($invoice);
+    //     } else {
+    //         // Handle the case where the cookie is not set
+    //         echo "PaymentResult cookie not found.";
+    //     }
+    // }
+    // function order()
+    // {
 
-        $callBackUrl = "";
-        $orderid = "78542856444363899";
-        $appId = BasSDK::GetAppId();
-        $amount = rand(100, 10000);
-        $order = BasSDK::Init($orderid, $amount, $callBackUrl, customerInfoId: 10, orderDetails: ["id" => 100]);
-        //echo $order;
-        $trxToken = $order['body']['trxToken'];
-        $orderid = $order['body']['order']['orderId'];
-        echo "trxToken: " . $trxToken, nl2br("\n");
-        echo "orderid: " . $orderid . nl2br("\n");
-        echo "<div id=orderid>";
-        // echo htmlspecialchars($orderid); // put as the div content
-        echo "</div>";
-        echo "<div id=trxToken>";
-        echo htmlspecialchars($trxToken); // put as the div content
-        echo "</div>";
-        echo "<div id=amount>";
-        echo htmlspecialchars($amount); // put as the div content
-        echo "</div>";
-        echo "<div id=appid>";
-        echo htmlspecialchars($appId); // put as the div content
-        echo "</div>";
+    //     $callBackUrl = "";
+    //     $orderid = "78542856444363899";
+    //     $appId = BasSDK::GetAppId();
+    //     $amount = rand(100, 10000);
+    //     $order = BasSDK::Init($orderid, $amount, $callBackUrl, customerInfoId: 10, orderDetails: ["id" => 100]);
+    //     //echo $order;
+    //     $trxToken = $order['body']['trxToken'];
+    //     $orderid = $order['body']['order']['orderId'];
+    //     echo "trxToken: " . $trxToken, nl2br("\n");
+    //     echo "orderid: " . $orderid . nl2br("\n");
+    //     echo "<div id=orderid>";
+    //     // echo htmlspecialchars($orderid); // put as the div content
+    //     echo "</div>";
+    //     echo "<div id=trxToken>";
+    //     echo htmlspecialchars($trxToken); // put as the div content
+    //     echo "</div>";
+    //     echo "<div id=amount>";
+    //     echo htmlspecialchars($amount); // put as the div content
+    //     echo "</div>";
+    //     echo "<div id=appid>";
+    //     echo htmlspecialchars($appId); // put as the div content
+    //     echo "</div>";
 
-        echo '<script>getPayment();</script>';
-    }
+    //     echo '<script>getPayment();</script>';
+    // }
 
 
     ?>

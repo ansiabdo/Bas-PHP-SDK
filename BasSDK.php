@@ -1,6 +1,10 @@
 <?php
+
+//namespace BasSdk;
 include('BasChecksum.php');
 include('config.php');
+
+
 /**
  * Bas uses checksum signature to ensure that API requests and responses shared between your 
  * application and Bas over network have not been tampered with. We use SHA256 hashing and 
@@ -314,7 +318,7 @@ class BasSDK
         $body = http_build_query($data);
 
         if (!is_null($code)) {
-            $response =    self::httpPost(self::GetuserInfoV2Url(), $body, $header);
+            $response =    self::httpPost(self::GetuserInfoUrlV2(), $body, $header);
             return json_decode($response, true);
         }
         return null;
@@ -380,7 +384,7 @@ class BasSDK
      */
     private static function SetMKey(string $mKey): void
     {
-        if (empty($mKey)) {
+        if (!self::isSandboxEnvironment() && empty($mKey)) {
             throw new InvalidArgumentException("BASSDK.SetmKey mKey is null");
         }
         ConfigProperties::$mKey = $mKey;
@@ -413,13 +417,6 @@ class BasSDK
         ConfigProperties::$clientSecret = $clientSecret;
     }
 
-    private static function SetEnvironment(ENVIRONMENT $environment): void
-    {
-        if (empty($environment->value)) {
-            throw new InvalidArgumentException("BASSDK.SetEnvironment environment is null");
-        }
-        ConfigProperties::$environment = $environment;
-    }
 
     /**
      * Get the appId .
@@ -484,7 +481,7 @@ class BasSDK
      * @return  string  $clientSecret
      * 
      */
-    private static function GetClientSecret(): string
+    public static function GetClientSecret(): string
     {
         if (empty(ConfigProperties::$clientSecret)) {
             throw new InvalidArgumentException("BASSDK.SetClientsecret clientsecret is null");
@@ -509,7 +506,7 @@ class BasSDK
         return self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::$redirectUrl);
     }
 
-    private static function GetuserInfoV2Url(): string
+    public static function GetuserInfoUrlV2(): string
     {
         if (empty(ConfigProperties::$userInfoV2Url)) {
             throw new InvalidArgumentException("BASSDK.GetuserInfoV2Url userInfoV2Url is null");
@@ -525,7 +522,7 @@ class BasSDK
         return self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::$initiatePaymentUrl);
     }
 
-    private static function GetPaymentStatusUrl(): string
+    public static function GetPaymentStatusUrl(): string
     {
         if (empty(ConfigProperties::$paymentStatusUrl)) {
             throw new InvalidArgumentException("BASSDK.GetPaymentStatusUrl paymentStatusUrl is null");
@@ -539,7 +536,7 @@ class BasSDK
         }
         return self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::$tokenUrl);
     }
-    private static function GetMobileFetchAuthUrl(): string
+    public static function GetMobileFetchAuthUrl(): string
     {
         if (empty(ConfigProperties::$mobileFetchAuthUrl)) {
             throw new InvalidArgumentException("BASSDK.GetMobileFetchAuthUrl mobileFetchAuthUrl is null");
@@ -547,7 +544,7 @@ class BasSDK
         return self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::$mobileFetchAuthUrl);
     }
 
-    private static function GetMobilePaymentUrl(): string
+    public static function GetMobilePaymentUrl(): string
     {
         if (empty(ConfigProperties::$mobilePaymentUrl)) {
             throw new InvalidArgumentException("BASSDK.GetMobilePaymentUrl mobilePaymentUrl is null");
@@ -582,7 +579,7 @@ class BasSDK
         return $response;
     }
     //TODO
-    private static function isSandboxEnvironment()
+    public static function isSandboxEnvironment()
     {
         if (ConfigProperties::$environment == ENVIRONMENT::SANDBOX) {
             return true;

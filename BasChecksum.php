@@ -1,5 +1,5 @@
 <?php
-
+//namespace BasSdk;
 /**
  * Bas uses checksum signature to ensure that API requests and responses shared between your 
  * application and Bas over network have not been tampered with. We use SHA256 hashing and 
