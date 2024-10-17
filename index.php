@@ -8,7 +8,7 @@ include('BasSDKHelper.php');
 include('Initialization.php');
 
 $initial = Initialization::getInstance();
-$initial->Initialize(ENVIRONMENT::SANDBOX);
+$initial->Initialize(ENVIRONMENT::STAGING);
 ?>
 <!DOCTYPE html>
 <html>
@@ -199,7 +199,8 @@ $initial->Initialize(ENVIRONMENT::SANDBOX);
 
     function CheckPaymentStatus()
     {
-        $orderid = "1499725e-db64-4ab5-b91b-e33cd62410e4";
+        //$orderid = "1499725e-db64-4ab5-b91b-e33cd62410e4";
+        $orderid = "1729191828";
         $amount = rand(100, 10000);
 
         $order_status = BasSDKHelper::CheckPaymentStatus($orderid);
