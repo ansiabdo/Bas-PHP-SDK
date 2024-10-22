@@ -1,3 +1,52 @@
+var isJSBridgeReady = false
+var isBasInDebug = false
+var isBasAuthTokenReturned = false
+console.log("Start Basgate-ClientSDK Script");
+// alert("Start Basgate-ClientSDK Script");
+
+function initBas() {
+    console.log("initBas() STARTED");
+    window.addEventListener("JSBridgeReady", async (event) => {
+        console.log("JSBridgeReady fired");
+        isJSBridgeReady = true
+        await getBasConfig();
+
+    }, false);
+}
+
+initBas();
+
+/*  @getBasConfig()
+    Dont call this method while your application in init mode
+    return {
+            'status': string,
+            'locale': string,
+            'isInBasSuperApp': bool,
+            'messages': string[],
+            'envType': string,
+        };
+*/
+const getBasConfig = async () => {
+    console.log("getBasConfig() STARTED");
+    return window.JSBridge.call('basConfigs').then(function (result) {
+        console.log("basConfigs Result:", JSON.stringify(result));
+        if (result) {
+            if ("isInBasSuperApp" in result) {
+                isJSBridgeReady = true;
+            }
+
+            if ("envType" in result) {
+                isBasInDebug = result.envType == "stage"
+            }
+            createCookie("envType", isBasInDebug, 10);
+            createCookie("isInBasSuperApp", JSON.stringify(result), 10);
+            return result;
+        } else {
+            return null
+        }
+    });
+}
+
 function oauthToken(clientId) {
     window.addEventListener("JSBridgeReady", async (event) => {
         console.log("JSBridgeReady fired");
