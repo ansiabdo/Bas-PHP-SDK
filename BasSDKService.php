@@ -384,7 +384,8 @@ class BasSDKService
      */
     private static function SetMKey(string $mKey): void
     {
-        if (!self::isSandboxEnvironment() && empty($mKey)) {
+        //if (!self::isSandboxEnvironment() && empty($mKey)) {
+            if (!self::isSandboxEnvironment() && $mKey === null) {
             throw new InvalidArgumentException("BASSDK.SetmKey mKey is null");
         }
         ConfigProperties::$mKey = $mKey;
