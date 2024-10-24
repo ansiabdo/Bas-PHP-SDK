@@ -1,12 +1,12 @@
 <?php
-
+//namespace BasSdk;
 /**
  * Bas uses checksum signature to ensure that API requests and responses shared between your 
  * application and Bas over network have not been tampered with. We use SHA256 hashing and 
  * AES128 encryption algorithm to ensure the safety of transaction data.
  *
- * @author     Kamal Hassan
- * @version    0.0.1
+ * @author     Kamal Hassan, Abdullah Al-Ansi
+ * @version    0.0.2
  * @link       https://.basgate.com/docs/
  */
 
