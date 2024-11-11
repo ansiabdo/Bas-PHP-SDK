@@ -34,7 +34,7 @@ class Initialization
         mKey: $mKey,
     );
 
-    echo 'Initialized environment: ' . BasSDK::GetEnvironment();
+    echo 'Initialized environment: ' . BasSDKService::GetEnvironment();
 
     return '<script src="bassdk.js" type="text/javascript"></script>';
 }
