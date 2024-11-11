@@ -46,7 +46,7 @@ const getBasConfig = async () => {
         }
     });
 }
-
+$clientId = 
 function oauthToken(clientId) {
     window.addEventListener("JSBridgeReady", async (event) => {
         console.log("JSBridgeReady fired");

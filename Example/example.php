@@ -26,11 +26,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 function login()
 {
-    if (BasSDK::GetEnvironment() !== ENVIRONMENT::SANDBOX) {
+    if (BasSDKService::GetEnvironment() !== ENVIRONMENT::SANDBOX) {
         if (isset($_COOKIE['isInBasSuperApp'])) {
 ?>
             <script>
-                var clientId = <?php echo BasSDK::GetClientId(); ?>;
+                var clientId = <?php echo BasSDKService::GetClientId(); ?>;
                 var x = await oauthToken(clientId);
             </script>
 <?php
@@ -44,7 +44,7 @@ function UserInfoV2()
     if (!is_null($authCode)) {
         echo "AuthCode: " . htmlspecialchars($authCode) . nl2br("\n");
 
-        $user_response = BasSDK::GetUserInfo($authCode);
+        $user_response = BasSDKService::GetUserInfo($authCode);
         if (is_null($user_response)) {
             echo "GetUserInfo: Status= 0\nError Can't get Token";
             return;
@@ -68,7 +68,7 @@ function InitiatePayment()
     $orderid = (string) time();
     $amount = rand(100, 10000);
     $customerInfoId = "75b32f99-5fe6-496f-8849-a5dedeb0a65f";
-    $order = BasSDK::InitPayment($orderid, $amount, $callBackUrl, customerInfoId: $customerInfoId);
+    $order = BasSDKService::InitPayment($orderid, $amount, $callBackUrl, customerInfoId: $customerInfoId);
 
     echo "<pre>";
     print_r($order);
@@ -78,7 +78,7 @@ function InitiatePayment()
 function CheckPaymentStatus()
 {
     $orderid = "1729191828";
-    $order_status = BasSDK::CheckPaymentStatus($orderid);
+    $order_status = BasSDKService::CheckPaymentStatus($orderid);
 
     echo "<pre>";
     print_r($order_status);

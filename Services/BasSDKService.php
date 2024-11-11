@@ -22,208 +22,142 @@ class BasSDKService
     private static $ContentTypeJson =  array('Content-Type: application/json', 'Accept: text/plain');
 
 
-    //#region Old
-
-    // static public function getUserInfo($code): mixed
-    // {
-    //     $token = self::getToken($code);
-    //     //return $token;
-    //     if (!is_null($token)) {
-    //         $header = array('Authorization: Bearer ' . $token);
-    //         $response =    self::httpGet(BASEURL . "auth/userInfo", null, $header);
-    //         return json_decode($response, true);
-    //     }
-    //     return null;
-    // }
-    // static public function getToken($code)
-    // {
-    //     $header = array('Content-Type: application/x-www-form-urlencoded');
-    //     $data = array();
-    //     $data['client_secret'] = CLIENT_SECRET;
-    //     $data['client_id'] = CLIENT_ID;
-    //     $data['grant_type'] = 'authorization_code';
-    //     $data['code'] = $code;
-    //     $data['redirect_uri'] = BASEURL . 'auth/callback';
-
-    //     //return http_build_query($data) . "\n";
-    //     $body = http_build_query($data);
-    //     $response =    self::httpPost(BASEURL . "auth/token", $body, $header);
-    //     $response = json_decode($response, true);
-    //     if (!is_array($response)) {
-    //         //  echo "is Not Array ".$response;
-    //         return null;
-    //     } else {
-
-    //         if (array_key_exists('access_token', $response)) {
-    //             //  $response=json_decode($response, true);
-    //             // echo $response;
-    //             return $response['access_token'];
-    //         }
-    //     }
-    //     return $response;
-    // }
-    //#endregion
-
-    static public function Init($orderId, $amount, $callBackUrl, $customerInfoId, $orderDetails)
-    {
-        $reqBody = '{"head":{"signature":"sigg","requestTimeStamp":"timess"},"body":bodyy}';
-        $header = array('Accept: text/plain', 'Content-Type: application/json');
-        //  $config=include('config.php');
-        $requestTimestamp = '1678695536';
-
-
-        $bodyy['requestTimestamp'] = $requestTimestamp;
-        $bodyy['appId'] = self::GetAppId();
-        $bodyy['orderId'] = $orderId;
-        $bodyy['orderType'] = 'PayBill';
-        $bodyy['amount'] = ['value' => $amount, 'currency' => 'YER'];
-
-        $bodyy['callBackUrl'] = $callBackUrl;
-
-        $bodyy['customerInfo'] = ['id' => $customerInfoId, 'name' => 'Test'];
-        $bodyy['orderDetails'] = $orderDetails;
-
-        $bodyyStr = json_encode($bodyy);
-        
-        $basChecksum = BasChecksum::generateSignature($bodyyStr, self::GetMKey());
-    /* prepare JSON string for request */
-    $reqBody = str_replace('bodyy', $bodyyStr, $reqBody);
-    $reqBody = str_replace('sigg', $basChecksum, $reqBody);
-    $reqBody = str_replace('timess', $requestTimestamp, $reqBody);
-        $head["signature"] = $basChecksum;
-        $head["requestTimestamp"] = $requestTimestamp;
-
-
-        $req["head"] = $head;
-        $req["body"] = $bodyy;
-        $paymentUrl = self::GetInitiatePaymentUrl();
-        $resp = self::httpPost($paymentUrl, json_encode($req), $header);
-         //return $resp;
-        if(self::isSandboxEnvironment()){
-            return  json_decode($resp, true);
-        }
-        //Add Signature
-        $isVerify = BasChecksum::verifySignature($bodyyStr, self::GetMKey(),checksum: $basChecksum );
-        if(!$isVerify){
-            throw new InvalidArgumentException("BASSDK.verifySignature Invalid_response_signature");
-        }
-
-        return  json_decode($resp, true);
-    }
-    static public function Init2($orderId, $amount, $callBackUrl, $customerInfoId, $orderDetails)
-    {
-        $reqBody = '{"head":{"signature":"sigg","requestTimeStamp":"timess"},"body":bodyy}';
-        //  $config=include('config.php');
-        $requestTimestamp =  (string)  time();
-
-        $bodyy['requestTimestamp'] = $requestTimestamp;
-        $bodyy['appId'] = self::GetAppId();
-        $bodyy['orderId'] = $orderId;
-        $bodyy['orderType'] = 'PayBill';
-        $bodyy['amount'] = ['value' => $amount, 'currency' => 'YER'];
-
-        $bodyy['callBackUrl'] = $callBackUrl;
-
-        $bodyy['customerInfo'] = ['id' => $customerInfoId, 'name' => 'Test'];
-        $bodyy['orderDetails'] = $orderDetails;
-
-        $bodyyStr = json_encode($bodyy);
-
-        $basChecksum = BasChecksum::generateSignature($bodyyStr, self::GetMKey());
-
-
-        /* prepare JSON string for request */
-        $reqBody = str_replace('bodyy', $bodyyStr, $reqBody);
-        $reqBody = str_replace('sigg', $basChecksum, $reqBody);
-        $reqBody = str_replace('timess', $requestTimestamp, $reqBody);
-        $paymentUrl = self::GetInitiatePaymentUrl();
-        $resp = self::httpPost($paymentUrl, $reqBody, self::$ContentTypeJson);
-        //return $resp;
-        if (self::isSandboxEnvironment()) {
-            return  json_decode($resp, true);
-        }
-        //Add Signature
-        $isVerify = BasChecksum::verifySignature($bodyyStr, self::GetMKey(), checksum: $basChecksum);
-        if (!$isVerify) {
-            throw new InvalidArgumentException("BASSDK.verifySignature Invalid_response_signature");
-        }
-
-        return  json_decode($resp, true);
-    }
-
-    static public function CheckStatus($orderId)
-    {
-        $requestTimestamp = '1668714632332';
-        $header = array('Content-Type: application/json');
-
-        $bodyy['RequestTimestamp'] = $requestTimestamp;
-        $bodyy['AppId'] = self::GetAppId();
-        $bodyy['OrderId'] = $orderId;
+     // #Region Stage Environment Methods
+      public static function GetUserInfo($code)
+     {
+         $header = array('Content-Type: application/x-www-form-urlencoded');
+         $data = array();
+         $data['client_id'] = self::GetClientId();
+         $data['client_secret'] = self::GetClientSecret();
+         $data['code'] = $code;
+         $data['redirect_uri'] = self::GetAuthRedirectUrl();
+         $body = http_build_query($data);
+ 
+         if (!is_null($code)) {
+             $response =    self::httpPost(self::GetuserInfoUrlV2(), $body, $header);
+             return json_decode($response, true);
+         }
+         return null;
+     }
+ 
+     public static function InitPayment($orderId, $amount, $callBackUrl, $customerInfoId): mixed
+     {
+         $reqBody = '{"head":{"signature":"sigg","requestTimeStamp":"timess"},"body":bodyy}';
+         // $requestTimestamp = gmdate("Y-m-d\TH:i:s\Z");
+         $requestTimestamp = (string)  time();
+         /* body parameters */
+         $params["body"] = array(
+             "appId" => self::GetAppId(),
+             "requestTimestamp" => $requestTimestamp,
+             "orderType" => "PayBill",
+             "callBackUrl" => $callBackUrl,
+             "customerInfo" => array(
+                 "id" => $customerInfoId,
+                 "name" => "Test"
+             ),
+             "amount" => array(
+                 "value" => (float) $amount,
+                 "currency" => 'YER',
+             ),
+ 
+             "orderId" => $orderId,
+             "orderDetails" => array(
+                 "Id" => $orderId,
+                 "Currency" => 'YER',
+                 "TotalPrice" => (float) $amount,
+             )
+         );
+         $bodystr = json_encode($params["body"]);
+ 
+         $checksum = BasChecksum::generateSignature($bodystr, self::GetMKey());
+ 
+         if ($checksum === false) {
+             error_log(
+                 sprintf(
+                     /* translators: 1: Event data. */
+                     'Could not retrieve signature, please try again Data: %1$s.',
+                     $bodystr
+                 )
+             );
+             throw new Exception('Could not retrieve signature, please try again.', self::GetMKey());
+         }
+ 
+         /* prepare JSON string for request */
+         $reqBody = str_replace('bodyy', $bodystr, $reqBody);
+         $reqBody = str_replace('sigg', $checksum, $reqBody);
+         $reqBody = str_replace('timess', '1729020006', $reqBody);
+         print_r($reqBody);
+         echo nl2br("\n") ."";
+         $url = self::GetInitiatePaymentUrl();
+         $header = array('Accept: text/plain', 'Content-Type: application/json');
+         $response = self::httpPost($url, $reqBody, $header);
+         if (self::isSandboxEnvironment()) {
+             return  json_decode($response, true);
+         }
+         $isVerify = BasChecksum::verifySignature($bodystr, self::GetMKey(), checksum: $checksum);
+         if (!$isVerify) {
+             throw new InvalidArgumentException("BasSDKService.verifySignature Invalid_response_signature");
+         }
+         if (!empty($res['body']['trxToken'])) {
+             $data['trxToken'] = $response['body']['trxToken'];
+             $data['trxId'] = $response['body']['trxId'];
+             $data['callBackUrl'] = $callBackUrl;
+         } else {
+             error_log(
+                 sprintf(
+                     /* translators: 1: bodystr, 2:. */
+                     'trxToken empty \n bodystr: %1$s , \n $checksum: %2$s.',
+                     $bodystr,
+                     $checksum
+                 )
+             );
+             $data['trxToken'] = "";
+         }
+         return  json_decode($response, true);
+       
+     }
+ 
+ 
+      public static function CheckPaymentStatus($orderId)
+     {
+         $requestTimestamp = '1668714632332';
+         $header = array('Content-Type: application/json');
+ 
+         $bodyy['RequestTimestamp'] = $requestTimestamp;
+         $bodyy['AppId'] = self::GetAppId();
+         $bodyy['OrderId'] = $orderId;
+ 
+ 
+         $bodyyStr = json_encode($bodyy);
+ 
+         $basChecksum = BasChecksum::generateSignature($bodyyStr, self::GetMKey());
+ 
+         $head["Signature"] = $basChecksum;
+         $head["RequestTimestamp"] = $requestTimestamp;
+ 
+         $req["Head"] = $head;
+         $req["Body"] = $bodyy;
+ 
+         $data = json_encode($req);
+         $paymentStatusUrl = self::GetPaymentStatusUrl();
+         $resp = self::httpPost(url: $paymentStatusUrl, data: $data, header: $header);
+ 
+         return  json_decode($resp, true);
+     }
+     #endregion
 
 
-        $bodyyStr = json_encode($bodyy);
-
-        $basChecksum = BasChecksum::generateSignature($bodyyStr, self::GetMKey());
-
-        $head["Signature"] = $basChecksum;
-        $head["RequestTimestamp"] = $requestTimestamp;
-
-        $req["Head"] = $head;
-        $req["Body"] = $bodyy;
-
-        $data = json_encode($req);
-        $paymentStatusUrl = self::GetPaymentStatusUrl();
-        $resp = self::httpPost(url: $paymentStatusUrl, data: $data, header: $header);
-
-        return  json_decode($resp, true);
-        // return $resp;
-    }
-
-    static function httpPost2($url, $data, $header)
-    {
-        try {
-            $curl = curl_init($url);
-            curl_setopt($curl, CURLOPT_POST, true);
-            curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
-            curl_setopt($curl, CURLOPT_HTTPHEADER, $header);
-            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
-
-            $response = curl_exec($curl);
-            $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-
-            if ($httpCode != 200) {
-                $msg = "Return httpCode is {$httpCode} \n"
-                    . curl_error($curl) . "URL: " . $url;
-                $error = curl_error($curl);
-                if ($error) {
-                   // wc_add_notice("Error: " . $error, 'error');
-                }
-                error_log(
-                    sprintf(
-                        /* translators: 1: Url, 2: Response code, 3: Event data, 4: ErrorMsg. */
-                        'executecUrl error status!=200 for url: %1$s, Response code: %2$s,Data: %3$s , ErrorMsg: %4$s',
-                        $url,
-                        $httpCode,
-                        $data,
-                        $error
-                    )
-                );
-                curl_close($curl);
-                return new Exception('Could not retrieve the access token, please try again.');
-                // return $msg;
-                //return $response;
-            } else {
-                curl_close($curl);
-                return json_decode($response, true);
-            }
-        } catch (\Throwable $th) {
-            return new Exception("ERROR On httpPost :" . $th->getMessage());
-        }
-    }
+    
     static function httpPost($url, $data, $header)
     {
+        self::AddOrReplaceKeyToHeader($header, 'User-Agent', 'BasSdk');
+        self::AddOrReplaceKeyToHeader($header, 'x-client-id', BasSdkService::getClientId());
+        self::AddOrReplaceKeyToHeader($header, 'x-app-id', BasSdkService::getAppId());
+        self::AddOrReplaceKeyToHeader($header, 'x-sdk-version', ConfigProperties::$CurrentVersion);
+        self::AddOrReplaceKeyToHeader($header, 'x-environment', ConfigProperties::$environment);
+        self::AddOrReplaceKeyToHeader($header, 'correlationId', self::GUID());
+        self::AddOrReplaceKeyToHeader($header, 'x-sdk-type', 'php');
+
 
         $curl = curl_init($url);
         curl_setopt($curl, CURLOPT_POST, true);
@@ -252,6 +186,14 @@ class BasSDKService
     }
     static function httpGet($url, $data, $header)
     {
+        self::AddOrReplaceKeyToHeader($header, 'User-Agent', 'BasSdk');
+        self::AddOrReplaceKeyToHeader($header, 'x-client-id', BasSdkService::getClientId());
+        self::AddOrReplaceKeyToHeader($header, 'x-app-id', BasSdkService::getAppId());
+        self::AddOrReplaceKeyToHeader($header, 'x-sdk-version', ConfigProperties::$CurrentVersion);
+        self::AddOrReplaceKeyToHeader($header, 'x-environment', ConfigProperties::$environment);
+        self::AddOrReplaceKeyToHeader($header, 'correlationId', self::GUID());
+        self::AddOrReplaceKeyToHeader($header, 'x-sdk-type', 'php');
+
         //if($url)
         $curl = curl_init($url);
 
@@ -281,6 +223,18 @@ class BasSDKService
             return $response;
         }
     }
+     static function AddOrReplaceKeyToHeader(&$headers, $key, $value) {
+        // Check if the header key already exists
+        if (array_key_exists($key, $headers)) {
+            // Replace the existing value
+            $headers[$key] = $value;
+        } else {
+            // Add new header
+            $headers[$key] = $value;
+        }
+    }
+    
+
 
 
     /**
@@ -579,6 +533,16 @@ class BasSDKService
 
         return $response;
     }
+    public static function GetEnvironment(): mixed
+    {
+        if (ConfigProperties::$environment !== null) {
+            return ConfigProperties::$environment->value;
+        } else {
+            throw new Exception("Environment is not initialized.");
+        }
+    }
+   
+
     //TODO
     public static function isSandboxEnvironment()
     {
@@ -587,6 +551,16 @@ class BasSDKService
         }
         return false;
     }
+    public static function GUID()
+    {
+        if (function_exists('com_create_guid') === true)
+        {
+            return trim(com_create_guid(), '{}');
+        }
+    
+        return sprintf('%04X%04X-%04X-%04X-%04X-%04X%04X%04X', mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(16384, 20479), mt_rand(32768, 49151), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535));
+    }
+
 
     public static function SendNotificationToCustomer($templateName, $orderId, $orderParams, $firebasePayload, $extraPayload): mixed
     {
@@ -612,49 +586,13 @@ class BasSDKService
         return json_decode($response, true);
     }
 
-    public static function SimulateMobileFetchAuthAsync($clientId): mixed
-    {
-        if (!self::isSandboxEnvironment()) {
-            throw new InvalidArgumentException('This method is only allowed on Sandbox environment');
-        }
-        $header = array('Content-Type: application/json');
-        $url = self::GetMobileFetchAuthUrl();
-        $fulUrl = $url . "?clientId=" . urlencode($clientId);
-        //echo "Full auth Url is: ". $fulUrl .nl2br("\n");
-        $jsonResponse = self::httpPost($fulUrl, data: null, header: $header);
-        $response = json_decode($jsonResponse);
-        // echo "Fatch Auth Response is : ". $response .nl2br("\n");
-        return $response;
-    }
-
-
-    public static function SimulateMobilePaymentAsync($orderId, $appId, $trxToken, $amount): mixed
-    {
-        if (!self::isSandboxEnvironment()) {
-            throw new InvalidArgumentException('This method is only available on Sandbox environment');
-        }
-        $header = array('Content-Type: application/json');
-        $data = array();
-
-        $data['amount'] = ['value' => $amount, 'currency' => 'YER'];
-        $data['appId'] = $appId;
-        $data['orderId'] = $orderId;
-        $data['trxToken'] = $trxToken;
-        // $merchantId = "ac90ddd1-6627-4ae9-b268-98c17bd8ee6c";
-        // $data['merchantId'] = $merchantId;
-
-        // Convert the data array to a JSON string
-        $body = json_encode($data);
-        //$body = http_build_query($data);
-        $url = self::GetMobilePaymentUrl();
-        $response = self::httpPost($url, $body, header: $header);
-        return $response;
-    }
+   
 }
 // #region Config 
 class  ConfigProperties
 {
 
+    public static  $CurrentVersion = "3.0.4";
     public static $openId;
     public static $mKey;
     public static $appId;
@@ -675,6 +613,7 @@ class  ConfigProperties
     public static  $mobilePaymentUrl = "/api/v1/mobile/payment";
     public static bool $isInitialized = false;
 
+    
     public static function SetEnvironment(ENVIRONMENT $environment): void
     {
         if (empty($environment->value)) {
@@ -682,6 +621,13 @@ class  ConfigProperties
         }
         self::$environment = $environment;
     }
-
 }
+
+enum ENVIRONMENT: string
+{
+    case STAGING = 'staging';
+    case PRODUCTION = 'production';
+    case SANDBOX = 'sandbox';
+}
+
 // #endregion
