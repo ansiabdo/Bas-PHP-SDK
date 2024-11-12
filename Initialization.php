@@ -3,7 +3,6 @@
 // $config = include('config.php');
 
 
-//namespace BasSdk;
 class Initialization
 {
     private static $instance;

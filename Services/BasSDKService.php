@@ -90,7 +90,9 @@ class BasSDKService
          echo nl2br("\n") ."";
          $url = self::GetInitiatePaymentUrl();
          $header = array('Accept: text/plain', 'Content-Type: application/json');
-         $response = self::httpPost($url, $reqBody, $header);
+         //var token
+         $response = self::httpPost($url, $reqBody, $header); 
+         //
          if (self::isSandboxEnvironment()) {
              return  json_decode($response, true);
          }
