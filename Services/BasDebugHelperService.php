@@ -13,7 +13,7 @@ class BasDebugHelperService {
      $url = BasSDKService::GetMobileFetchAuthUrl();
      $fulUrl = $url . "?clientId=" . urlencode($clientId);
      //echo "Full auth Url is: ". $fulUrl .nl2br("\n");
-     $jsonResponse = BasSDKService::httpPost($fulUrl, data: null, header: $header);
+     $jsonResponse = BasSDKService::httpPost($fulUrl, data: null, header: $header,grantType: GrantTypes::client_credentials);
      echo $jsonResponse . nl2br("\n");
      $response = json_decode($jsonResponse);
      // echo "Fatch Auth Response is : ". $response .nl2br("\n");
@@ -38,7 +38,7 @@ class BasDebugHelperService {
      $body = json_encode($data);
      //$body = http_build_query($data);
      $url = BasSDKService::GetMobilePaymentUrl();
-     $response = BasSDKService::httpPost($url, $body, header: $header);
+     $response = BasSDKService::httpPost($url, $body, header: $header,grantType: GrantTypes::client_credentials);
      return $response;
  }
 
