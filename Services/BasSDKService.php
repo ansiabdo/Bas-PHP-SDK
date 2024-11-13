@@ -3,7 +3,7 @@
 //namespace BasSdk;
 include('../BasChecksum.php');
 include('../config.php');
-
+// ini_set('memory_limit', '20480M');
 
 /**
  * Bas uses checksum signature to ensure that API requests and responses shared between your 
@@ -28,23 +28,21 @@ class BasSDKService
      static public function getToken($grantType, $code = null)
      {
          $header = array('Content-Type: application/x-www-form-urlencoded');
-         $data = array(
-            'client_id' => self::GetClientId(),
-            'client_secret' => self::GetClientSecret()
-        );
+         $data = array();
 
         // Check the grant type and set the appropriate data
         if ($grantType === GrantTypes::client_credentials) {
             $data['grant_type'] = GrantTypes::client_credentials;
-           
         } 
         elseif ($grantType === GrantTypes::authorization_code) {
             $data['grant_type'] = GrantTypes::authorization_code;
             $data['code'] = $code;
             $data['redirect_uri'] = self::GetAuthRedirectUrl();
         }
+     
+
          $body = http_build_query($data);
-         $response =    self::httpPost(self::GetTokenUrl(), $body, $header, $grantType);
+         $response =    self::httpPostGetToken(self::GetTokenUrl(), $body, $header);
          $response = json_decode($response, true);
          return $response;
         //  if (!is_array($response)) {
@@ -128,6 +126,7 @@ class BasSDKService
          echo nl2br("\n") ."";
          $url = self::GetInitiatePaymentUrl();
          $header = array('Accept: text/plain', 'Content-Type: application/json');
+         
          //var token
          $response = self::httpPost($url, $reqBody, $header, GrantTypes::client_credentials); 
          //
@@ -190,7 +189,7 @@ class BasSDKService
     
     static function httpPost($url, $data, $header, $grantType)
     {
-        $tokenResponse = self::getToken($grantType);
+        $tokenResponse = BasSDKService::getToken($grantType);
         if (empty($tokenResponse['access_token'])) {
             throw new Exception("invalid grant"); 
         }
@@ -202,7 +201,7 @@ class BasSDKService
         self::AddOrReplaceKeyToHeader($header, 'x-app-id', BasSdkService::getAppId());
         self::AddOrReplaceKeyToHeader($header, 'x-sdk-version', ConfigProperties::$CurrentVersion);
         self::AddOrReplaceKeyToHeader($header, 'x-environment', ConfigProperties::$environment);
-        self::AddOrReplaceKeyToHeader($header, 'correlationId', self::GUID());
+        self::AddOrReplaceKeyToHeader($header, 'correlationId', BasSdkService::GUID());
         self::AddOrReplaceKeyToHeader($header, 'x-sdk-type', 'php');
 
 
@@ -231,6 +230,44 @@ class BasSDKService
             return $response;
         }
     }
+    static function httpPostGetToken($url, $data, $header)
+    {
+       
+        // self::AddOrReplaceKeyToHeader($header, 'User-Agent', 'BasSdk');
+        // self::AddOrReplaceKeyToHeader($header, 'x-client-id', BasSdkService::getClientId());
+        // self::AddOrReplaceKeyToHeader($header, 'x-app-id', BasSdkService::getAppId());
+        // self::AddOrReplaceKeyToHeader($header, 'x-sdk-version', ConfigProperties::$CurrentVersion);
+        // self::AddOrReplaceKeyToHeader($header, 'x-environment', ConfigProperties::$environment);
+        // self::AddOrReplaceKeyToHeader($header, 'correlationId', BasSdkService::GUID());
+        // self::AddOrReplaceKeyToHeader($header, 'x-sdk-type', 'php');
+
+
+        $curl = curl_init($url);
+        curl_setopt($curl, CURLOPT_POST, true);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, $header);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+
+        $response = curl_exec($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
+
+        if ($httpCode != 200) {
+            $msg = "Return httpCode is {$httpCode} \n"
+                . curl_error($curl) . "URL: " . $url;
+            //echo $msg,nl2br("\n");
+            // echo $msg.$errorresponse['Messages'][0];
+            curl_close($curl);
+            return $msg;
+            //return $response;
+        } else {
+            curl_close($curl);
+            return $response;
+        }
+    }
+
     static function httpGet($url, $data, $header, $grantType)
     {
         $tokenResponse = self::getToken($grantType);
@@ -526,6 +563,7 @@ class BasSDKService
         if (empty(ConfigProperties::$tokenUrl)) {
             throw new InvalidArgumentException("BASSDK.GetTokenUrl tokenUrl is null");
         }
+      //  ini_set('memory_limit', '-1');
         return self::GetFullBaseUrlBasedOnEnvironment(ConfigProperties::$tokenUrl);
     }
     public static function GetMobileFetchAuthUrl(): string
