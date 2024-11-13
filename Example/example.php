@@ -7,7 +7,7 @@ include(dirname(__DIR__) . '/BasSDKService.php');
 include(dirname(__DIR__) . '/Initialization.php');
 
 $initial = Initialization::getInstance();
-$initial->Initialize(ENVIRONMENT::SANDBOX);
+$initial->Initialize(ENVIRONMENT::STAGING);
 
 // Handle the form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

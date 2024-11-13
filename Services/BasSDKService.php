@@ -617,8 +617,8 @@ class  ConfigProperties
     public static  $baseUrlProduction = "https://api.basgate.com:4950";
     public static  $redirectUrl = "/api/v1/auth/callback";
     public static  $userInfoV2Url = "/api/v1/auth/secure/userinfo";
-    public static  $initiatePaymentUrl = "/api/v1/merchant/secure/transaction/initiate";
-    public static  $paymentStatusUrl = "/api/v1/merchant/secure/transaction/status";
+    public static  $initiatePaymentUrl = "/api/v2/merchant/secure/transaction/initiate";
+    public static  $paymentStatusUrl = "/api/v2/merchant/secure/transaction/status";
     public static  $notificationUrl = "/api/v1/merchant/secure/notifications/send-to-customer";
     public static  $tokenUrl = "/api/v1/auth/token";
     public static  $mobileFetchAuthUrl = "/api/v1/mobile/fetchAuth";

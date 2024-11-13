@@ -12,7 +12,7 @@
     <h1 style="color:deeppink;">Bas SDK</h1>
 
     <form method="post">
-        <?php if (BasSDK::GetEnvironment() !== Environment::SandBox): ?>
+        <?php if (BasSdkService::GetEnvironment() !== Environment::SandBox): ?>
             <div style="text-align: center;">
                 <!-- Buttons for non-sandbox environments -->
                 <input type="submit" name="login" class="button" value="Login" />
@@ -20,9 +20,9 @@
                 <input type="submit" name="initiate_payment" class="button" value="Initiate Payment" />
                 <input type="submit" name="check_payment_status" class="button" value="Check Payment Status" />
             </div>
-        <?php endif; ?>
+            <?php endif; ?>
     
-        <?php if (BasSDK::GetEnvironment() === Environment::SandBox): ?>
+        <?php if (BasSdkService::GetEnvironment() === Environment::SandBox): ?>
             <br>
             <br>
             <div style="text-align: center;">

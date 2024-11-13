@@ -23,7 +23,7 @@ class Initialization
 
     public function Initialize(ENVIRONMENT $env): string
 {
-    $mKey = $env === ENVIRONMENT::SANDBOX ? '' : MKEY;
+    $mKey = $env === ENVIRONMENT::STAGING ? '' : MKEY;
     BasSDKService::Initialize(
         $env,
         clientId: CLIENT_ID,
