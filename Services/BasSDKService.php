@@ -1,8 +1,8 @@
 <?php
 
 //namespace BasSdk;
-include('BasChecksum.php');
-include('config.php');
+include('../BasChecksum.php');
+include('../config.php');
 
 
 /**

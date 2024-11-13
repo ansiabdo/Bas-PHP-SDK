@@ -2,9 +2,8 @@
 
 use PSpell\Config;
 
-include(dirname(__DIR__) . '/BasSDK.php');
-include(dirname(__DIR__) . '/BasSDKService.php');
-include(dirname(__DIR__) . '/Initialization.php');
+include(dirname(__DIR__) . '../Services/BasSDKService.php');
+include(dirname(__DIR__) . '../Initialization.php');
 
 $initial = Initialization::getInstance();
 $initial->Initialize(ENVIRONMENT::STAGING);
