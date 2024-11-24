@@ -27,7 +27,7 @@ $initial->Initialize(ENVIRONMENT::STAGING);
         <?php if (BasSDKService::GetEnvironment() !== Environment::SANDBOX): ?>
             <div style="text-align: center;">
                 <!-- Buttons for non-sandbox environments -->
-                <input type="submit" name="login" class="button" value="Login" />
+                <!-- <input type="submit" name="login" class="button" value="Login" /> -->
                 <input type="submit" name="user_info" class="button" value="User Info" />
                 <input type="submit" name="initiate_payment" class="button" value="Initiate Payment" />
                 <input type="submit" name="check_payment_status" class="button" value="Check Payment Status" />
@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (array_key_exists('login', $_POST)) {
         login();
     } else if (array_key_exists('user_info', $_POST)) {
-        UserInfoV2();
+        UserInfoV3();
     } else if (array_key_exists('initiate_payment', $_POST)) {
         InitiatePayment();
     } else if (array_key_exists('check_payment_status', $_POST)) {
@@ -81,6 +81,23 @@ function login()
         }
     }
 }
+
+function UserInfoV3()
+{
+        $user_response = BasSDKService::GetUserInfo();
+        if (is_null($user_response)) {
+            echo "GetUserInfo: Status= 0\nError Can't get Token";
+            return;
+        }
+
+        $user_status = $user_response['status'];
+        if ($user_status == 1) {
+            $user_name = $user_response['data']['user_name'];
+            echo "GetUserInfo: Status= " . $user_status . " User_Name: " . $user_name;
+        } else {
+            echo "GetUserInfo: Status= " . $user_status . " Code: " . $user_response['code'];
+        }
+    } 
 
 function UserInfoV2()
 {
