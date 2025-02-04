@@ -23,19 +23,19 @@ class Initialization
     }
 
     public function Initialize(ENVIRONMENT $env): string
-{
-    $mKey = $env === ENVIRONMENT::SANDBOX ? '' : MKEY;
-    BasSDKService::Initialize(
-        $env,
-        clientId: CLIENT_ID,
-        clientSecret: CLIENT_SECRET,
-        appId: APP_ID,
-        openId: OPEN_ID,
-        mKey: $mKey,
-    );
+    {
+        $mKey = $env === ENVIRONMENT::SANDBOX ? '' : MKEY;
+        BasSDKService::Initialize(
+            $env,
+            clientId: CLIENT_ID,
+            clientSecret: CLIENT_SECRET,
+            appId: APP_ID,
+            openId: OPEN_ID,
+            mKey: $mKey,
+        );
 
-    echo 'Initialized environment: ' . BasSDK::GetEnvironment();
+        echo 'Initialized environment: ' . BasSDK::GetEnvironment();
 
-    return '<script src="bassdk.js" type="text/javascript"></script>';
-}
+        return '<script src="bassdk.js" type="text/javascript"></script>';
+    }
 }
